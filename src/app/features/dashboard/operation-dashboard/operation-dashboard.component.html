@@ -1,0 +1,145 @@
+<div class="operation-layout">
+
+  <nav class="navbar">
+    <div class="nav-left">
+      <button class="back-btn" (click)="goBack()">← Volver</button>
+      <svg width="28" height="28" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="22" fill="#1DA5A0"/>
+        <circle cx="24" cy="24" r="12" fill="#1E3A6E"/>
+        <circle cx="24" cy="24" r="5" fill="#111"/>
+        <circle cx="20" cy="20" r="3" fill="white" opacity="0.6"/>
+      </svg>
+      <span class="nav-title">Dashboard de Operación</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-date">{{ today | date:"EEEE, d 'de' MMMM" }}</span>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <!-- MÉTRICAS GLOBALES -->
+    <div class="metrics">
+      <div class="metric-card">
+        <span class="metric-icon">📋</span>
+        <span class="metric-num">{{ tareasHoy.length }}</span>
+        <span class="metric-label">Tareas hoy</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">✅</span>
+        <span class="metric-num">{{ tareasCompletadasHoy.length }}</span>
+        <span class="metric-label">Completadas</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">⏳</span>
+        <span class="metric-num">{{ tareasPendientesHoy.length }}</span>
+        <span class="metric-label">Pendientes</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">👥</span>
+        <span class="metric-num">{{ tecnicosActivos }}</span>
+        <span class="metric-label">Técnicos activos</span>
+      </div>
+    </div>
+
+    <!-- TABLA DE OPERACIÓN EN TIEMPO REAL -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>🔴 En vivo — Estado de técnicos</h2>
+        <span class="live-badge">● En tiempo real</span>
+      </div>
+
+      <div class="operation-table">
+        <div class="table-header">
+          <span>Técnico</span>
+          <span>Estado</span>
+          <span>Entrada</span>
+          <span>Salida</span>
+          <span>Tarea activa</span>
+          <span>Tareas hoy</span>
+        </div>
+
+        @for (user of users; track user.uid) {
+          <div class="table-row" [class]="'row-' + getEstadoClass(user.uid)">
+            <div class="col-tecnico">
+              <div class="tech-avatar">{{ user.nombre.charAt(0) }}</div>
+              <span>{{ user.nombre }}</span>
+            </div>
+            <div class="col-estado">
+              <span class="estado-badge" [class]="'estado-' + getEstadoClass(user.uid)">
+                {{ getEstadoLabel(user.uid) }}
+              </span>
+            </div>
+            <div class="col-time">
+              {{ formatTime(getAttendance(user.uid)?.entrada) }}
+            </div>
+            <div class="col-time">
+              {{ formatTime(getAttendance(user.uid)?.salida) }}
+            </div>
+            <div class="col-tarea">
+              @if (getTareaActiva(user.uid); as tarea) {
+                <div class="tarea-activa">
+                  <span class="folio-small">{{ tarea.folioId }}</span>
+                  <span class="cliente-small">{{ tarea.cliente }}</span>
+                </div>
+              } @else {
+                <span class="sin-tarea">—</span>
+              }
+            </div>
+            <div class="col-progress">
+              <span class="progress-text">
+                {{ getTareasHoyUser(user.uid).filter(t => t.estado === 'completada').length }}/{{ getTareasHoyUser(user.uid).length }}
+              </span>
+              @if (getTareasHoyUser(user.uid).length > 0) {
+                <div class="mini-bar">
+                  <div class="mini-bar-fill"
+                       [style.width]="(getTareasHoyUser(user.uid).filter(t => t.estado === 'completada').length / getTareasHoyUser(user.uid).length * 100) + '%'">
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (users.length === 0) {
+          <div class="table-empty">
+            <p>No hay técnicos registrados.</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- LOG DE ASISTENCIA -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>📋 Log de asistencia — Hoy</h2>
+      </div>
+      @if (attendance.length > 0) {
+        <div class="attendance-log">
+          @for (att of attendance; track att.uid) {
+            <div class="log-row">
+              <div class="log-avatar">{{ att.nombre.charAt(0) }}</div>
+              <div class="log-info">
+                <span class="log-nombre">{{ att.nombre }}</span>
+                <div class="log-times">
+                  <span class="log-entrada">🟢 Entrada: {{ formatTime(att.entrada) }}</span>
+                  @if (att.salida) {
+                    <span class="log-salida">🔴 Salida: {{ formatTime(att.salida) }}</span>
+                  } @else {
+                    <span class="log-active">● Activo</span>
+                  }
+                </div>
+              </div>
+              <span class="log-estado estado-{{ att.estado }}">{{ getEstadoLabel(att.uid) }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="log-empty">
+          <p>Ningún técnico ha checado entrada hoy.</p>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,310 @@
+<div class="admin-layout">
+
+  <nav class="navbar">
+    <div class="nav-left">
+      <svg width="32" height="32" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="22" fill="#1DA5A0"/>
+        <circle cx="24" cy="24" r="12" fill="#1E3A6E"/>
+        <circle cx="24" cy="24" r="5" fill="#111"/>
+        <circle cx="20" cy="20" r="3" fill="white" opacity="0.6"/>
+      </svg>
+      <span class="nav-title">Portal de Servicios</span>
+      <span class="nav-badge">Admin</span>
+    </div>
+   <div class="nav-right">
+  <button class="btn-users" (click)="router.navigate(['/admin/users'])">Usuarios</button>
+  <button class="btn-new" (click)="openModal()">+ Nueva tarea</button>
+  <button class="btn-operation" (click)="router.navigate(['/operation'])">Operacion</button>
+  <button class="btn-reporte" (click)="generarReportePDF()" [disabled]="generandoReporte">
+    {{ generandoReporte ? 'Generando...' : 'Reporte del dia' }}
+  </button>
+  <span class="nav-user">{{ currentUser?.nombre }}</span>
+  <button class="btn-logout" (click)="logout()">Salir</button>
+</div>
+  </nav>
+
+  <div class="content">
+
+    <div class="page-header">
+      <div>
+        <h1>Panel de Administración</h1>
+        <p>Bienvenido, {{ currentUser?.nombre }}</p>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric-card">
+        <span class="metric-icon">📋</span>
+        <span class="metric-num">{{ totalTasks }}</span>
+        <span class="metric-label">Total tareas</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">✅</span>
+        <span class="metric-num">{{ completadas }}</span>
+        <span class="metric-label">Completadas</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">⚡</span>
+        <span class="metric-num">{{ pendientes }}</span>
+        <span class="metric-label">Pendientes</span>
+      </div>
+    </div>
+
+    <!-- RESUMEN DE TÉCNICOS -->
+    @if (technicianSummary.length > 0) {
+      <div class="tech-summary-section">
+        <h2 class="tech-summary-title">👥 Resumen por técnico — Hoy</h2>
+        <div class="tech-summary-grid">
+          @for (tech of technicianSummary; track tech.uid) {
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <div class="tech-avatar">{{ tech.nombre.charAt(0) }}</div>
+                <div class="tech-info">
+                  <span class="tech-name">{{ tech.nombre }}</span>
+                  <span class="tech-tasks">{{ tech.completadasHoy }}/{{ tech.totalHoy }} tareas</span>
+                </div>
+                <span class="tech-pct" [class.done]="tech.progreso === 100">
+                  {{ tech.progreso }}%
+                </span>
+              </div>
+              <div class="tech-progress-bar">
+                <div class="tech-progress-fill"
+                     [style.width]="tech.progreso + '%'"
+                     [class.complete]="tech.progreso === 100">
+                </div>
+              </div>
+              <div class="tech-stats">
+                <span class="tech-stat pending">⏳ {{ tech.pendientesHoy }} pendientes</span>
+                @if (tech.tiempoRestante > 0) {
+                  <span class="tech-stat time">⏱ {{ formatMinutos(tech.tiempoRestante) }} restantes</span>
+                } @else if (tech.tiempoEstimado > 0) {
+                  <span class="tech-stat done-text">✅ Al día</span>
+                } @else {
+                  <span class="tech-stat no-time">Sin tiempo estimado</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="filters">
+      <span class="filter-label">Todas las tareas</span>
+      <div class="filter-btns">
+        <button [class.active]="filterStatus==='todos'" (click)="setFilter('todos')">Todos</button>
+        <button [class.active]="filterStatus==='pendiente'" (click)="setFilter('pendiente')">Pendiente</button>
+        <button [class.active]="filterStatus==='completada'" (click)="setFilter('completada')">Completada</button>
+      </div>
+    </div>
+
+    <!-- BUSCADOR -->
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input [(ngModel)]="searchQuery"
+             placeholder="Buscar por cliente, folio, dirección o técnico..."/>
+      @if (searchQuery) {
+        <button class="search-clear" (click)="searchQuery = ''">✕</button>
+      }
+    </div>
+
+    @if (searchQuery) {
+      <div class="search-results-label">
+        {{ searchResults.length }} resultado(s) para "{{ searchQuery }}"
+      </div>
+    }
+
+    <!-- PEDIDOS DE MATERIALES -->
+    @if (pedidos.length > 0) {
+      <div class="section-divider">
+        <span>📦 Pedidos de materiales ({{ pedidos.length }})</span>
+      </div>
+      <div class="tasks-grid">
+        @for (task of pedidos; track task.id) {
+          <div class="task-card pedido-card" (click)="openTask(task.id!)">
+            <div class="task-card-header">
+              <span class="folio pedido-folio">📦 Pedido de materiales</span>
+              <span class="pedido-date">{{ task.creadoEn | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <h3>{{ task.asignadoNombre?.[0] || 'Técnico' }}</h3>
+            <p class="desc">{{ task.descripcion }}</p>
+            <div class="task-footer">
+              <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+              <div class="task-actions" (click)="$event.stopPropagation()">
+                <button class="btn-del" (click)="deleteTask(task.id!)">🗑️</button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- TAREAS NORMALES -->
+    <div class="section-divider">
+      <span>📋 Tareas ({{ tareasNormales.length }})</span>
+    </div>
+    <div class="tasks-grid">
+      @for (task of tareasNormales; track task.id) {
+        <div class="task-card" (click)="openTask(task.id!)">
+          <div class="task-card-header">
+            <span class="folio">{{ task.folioId }}</span>
+            <div class="stars">
+              @for (s of stars(task.prioridad); track $index) {
+                <span class="star filled">★</span>
+              }
+              @for (s of emptyStars(task.prioridad); track $index) {
+                <span class="star">☆</span>
+              }
+            </div>
+          </div>
+          <h3>{{ task.cliente }}</h3>
+          <p class="address">📍 {{ task.direccion }}</p>
+          <p class="tech">👤 {{ getTecnicoNames(task.asignadoA) }}</p>
+          <p class="desc">{{ task.descripcion }}</p>
+          <div class="task-footer">
+            <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+            <span class="badge badge-{{task.pago === 'pagado' ? 'pagado' : task.pago === 'abono' ? 'abono' : 'no-pagado'}}">
+              {{ getPaymentLabel(task.pago) }}
+            </span>
+            @if (task.duracionEstimada) {
+              <span class="duration-badge">⏳ {{ task.duracionEstimada }}min</span>
+            }
+            <div class="task-actions" (click)="$event.stopPropagation()">
+              <button class="btn-edit" (click)="openModal(task)">✏️</button>
+              <button class="btn-del" (click)="deleteTask(task.id!)">🗑️</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (tareasNormales.length === 0) {
+        <div class="empty">
+          @if (searchQuery) {
+            <p>Sin resultados para "{{ searchQuery }}"</p>
+          } @else {
+            <p>No hay tareas. Crea la primera con "+ Nueva tarea"</p>
+          }
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
+
+@if (showModal) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingTask ? 'Editar Tarea' : 'Nueva Tarea' }}</h2>
+        <button (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label>Cliente *</label>
+          <input [(ngModel)]="form.cliente" placeholder="Nombre del cliente o empresa"/>
+        </div>
+        <div class="field">
+          <label>Dirección *</label>
+          <input [(ngModel)]="form.direccion" placeholder="Dirección completa"/>
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input [(ngModel)]="form.telefono" placeholder="555-000-0000"/>
+        </div>
+        <div class="field">
+          <label>Descripción del trabajo</label>
+          <textarea [(ngModel)]="form.descripcion" rows="3"
+                    placeholder="Descripción detallada..."></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Prioridad</label>
+            <div class="priority-selector">
+              <button [class.active]="form.prioridad===1" (click)="setPriority(1)">★☆☆</button>
+              <button [class.active]="form.prioridad===2" (click)="setPriority(2)">★★☆</button>
+              <button [class.active]="form.prioridad===3" (click)="setPriority(3)">★★★</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Monto total ($)</label>
+            <input type="number" [(ngModel)]="form.monto"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Asignar técnicos *</label>
+          <div class="tecnicos-list">
+            @for (u of users; track u.uid) {
+              <div class="tecnico-option" [class.selected]="isTecnicoSelected(u.uid)"
+                   (click)="toggleTecnico(u.uid)">
+                <div class="tecnico-avatar">{{ u.nombre.charAt(0) }}</div>
+                <span>{{ u.nombre }}</span>
+                @if (isTecnicoSelected(u.uid)) {
+                  <span class="check">✓</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Estado de pago</label>
+            <select [(ngModel)]="form.pago">
+              <option value="no_pagado">No pagado</option>
+              <option value="pagado">Pagado</option>
+              <option value="abono">Abono</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Hora programada</label>
+            <input type="time" [(ngModel)]="form.horaProgramada"/>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Fecha programada</label>
+            <input type="date" [(ngModel)]="form.fechaProgramada"/>
+          </div>
+          <div class="field">
+            <label>Duración estimada (minutos)</label>
+            <input type="number" [(ngModel)]="form.duracionEstimada"
+                   placeholder="Ej. 60" min="0"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Materiales</label>
+          <div class="material-input">
+            <input [(ngModel)]="form.materialInput" placeholder="Agregar material..."
+                   (keyup.enter)="addMaterial()"/>
+            <button (click)="addMaterial()">+</button>
+          </div>
+          <div class="material-list">
+            @for (m of form.materiales; track $index; let i = $index) {
+              <span class="material-tag">
+                {{ m }} <span (click)="removeMaterial(i)">✕</span>
+              </span>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Notas adicionales</label>
+          <textarea [(ngModel)]="form.notas" rows="2"
+                    placeholder="Observaciones especiales..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button class="btn-primary" (click)="saveTask()">
+          {{ editingTask ? 'Guardar cambios' : 'Crear tarea' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

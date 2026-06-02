@@ -1,0 +1,11 @@
+@use '../../auth/login/login.component.scss';
+
+.success-box {
+  background: #D1FAE5;
+  color: #065F46;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+}

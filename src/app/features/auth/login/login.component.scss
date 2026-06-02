@@ -1,0 +1,123 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--si-blue-dark) 0%, var(--si-blue) 100%);
+  padding: 24px;
+}
+
+.login-card {
+  background: var(--si-white);
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18);
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--si-blue-dark);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--si-text-sub);
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+
+  .logo-sistemas {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--si-blue-dark);
+  }
+  .logo-integra {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: var(--si-blue-dark);
+  }
+  .logo-tagline {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--si-text-sub);
+    margin-top: 4px;
+  }
+}
+
+.field {
+  margin-bottom: 16px;
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--si-text);
+  }
+}
+
+.input-wrap {
+  position: relative;
+  .icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+  }
+  input { padding-left: 36px; }
+  .toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 14px;
+  }
+}
+
+.error-box {
+  background: #FEE2E2;
+  color: #991B1B;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.divider {
+  height: 1px;
+  background: var(--si-border);
+  margin: 20px 0;
+}
+
+.link-register {
+  display: block;
+  text-align: center;
+  color: var(--si-blue);
+  font-size: 13px;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.btn-primary { margin-top: 8px; }

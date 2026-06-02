@@ -1,0 +1,359 @@
+@if (loading) {
+  <div class="loading"><p>Cargando tarea...</p></div>
+} @else if (task) {
+  <div class="detail-layout">
+
+    <nav class="navbar">
+      <div class="nav-left">
+        <button class="back-btn" (click)="goBack()">← Volver</button>
+        <svg width="28" height="28" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="22" fill="#1DA5A0"/>
+          <circle cx="24" cy="24" r="12" fill="#1E3A6E"/>
+          <circle cx="24" cy="24" r="5" fill="#111"/>
+          <circle cx="20" cy="20" r="3" fill="white" opacity="0.6"/>
+        </svg>
+        <span class="nav-title">Portal de Servicios</span>
+      </div>
+      <div class="nav-right">
+        <span class="folio-badge">{{ esPedido ? '📦 Pedido' : task.folioId }}</span>
+        <span class="nav-user">{{ currentUser?.nombre }}</span>
+      </div>
+    </nav>
+
+    <div class="content">
+
+      @if (esPedido) {
+
+        <!-- ── VISTA PEDIDO ── -->
+        <div class="task-header">
+          <div class="task-header-left">
+            <h1>📦 Pedido de materiales</h1>
+            <div class="task-meta">
+              <span>👤 Solicitado por: {{ asignadosNombres }}</span>
+              @if (task.creadoEn) {
+                <span>📅 {{ task.creadoEn | date:'dd/MM/yyyy HH:mm' }}</span>
+              }
+            </div>
+          </div>
+          <div class="task-header-right">
+            <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <div class="left-col">
+            <div class="section-card">
+              <div class="section-header"><span>📋 Materiales solicitados</span></div>
+              <p class="desc-text" style="white-space: pre-wrap;">{{ task.descripcion }}</p>
+            </div>
+            @if (task.notas) {
+              <div class="section-card">
+                <div class="section-header"><span> Notas</span></div>
+                <p class="desc-text">{{ task.notas }}</p>
+              </div>
+            }
+          </div>
+          <div class="right-col">
+            <div class="section-card">
+              <div class="section-header"><span> Costo de materiales</span></div>
+              <div class="cobro-field">
+                <label>Monto ($)</label>
+                <div class="abono-row">
+                  <input type="number"
+                         [(ngModel)]="task.monto"
+                         placeholder="0"
+                         min="0"/>
+                  <button class="btn-save-abono" (click)="updateMontoPedido()">
+                    {{ montoPedidoGuardado ? '✅ Guardado' : 'Guardar' }}
+                  </button>
+                </div>
+              </div>
+              <div class="payment-btns" style="margin-top: 12px;">
+                <button [class.active-pagado]="task.pago==='pagado'"
+                        (click)="updatePayment('pagado')">PAGADO</button>
+                <button [class.active-no-pagado]="task.pago==='no_pagado'"
+                        (click)="updatePayment('no_pagado')">PENDIENTE</button>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span> Estado del pedido</span></div>
+              <div class="status-btns">
+                <button [class.active]="task.estado==='pendiente'"
+                        (click)="updateStatus('pendiente')">⏳ Pendiente</button>
+                <button [class.active-progress]="task.estado==='en_progreso'"
+                        (click)="updateStatus('en_progreso')">🔄 En proceso</button>
+              </div>
+              <button (click)="marcarSurtidoYEliminar()"
+                      style="margin-top:12px; width:100%; background:#10B981; color:#fff; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">
+                ✅ Marcar como surtido y eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+
+      } @else {
+
+        <!-- ── VISTA NORMAL ── -->
+        <div class="task-header">
+          <div class="task-header-left">
+            <div class="stars">
+              @for (s of stars(task.prioridad); track $index) {
+                <span class="star filled">★</span>
+              }
+              @for (s of emptyStars(task.prioridad); track $index) {
+                <span class="star">☆</span>
+              }
+            </div>
+            <h1>{{ task.cliente }}</h1>
+            <div class="task-meta">
+              <span>📍 {{ task.direccion }}</span>
+              <span>📞 <a [href]="'tel:' + task.telefono">{{ task.telefono }}</a></span>
+              <span>👤 Asignado a: {{ asignadosNombres }}</span>
+              @if (task.horaProgramada) {
+                <span>🕐 {{ formatHora(task.horaProgramada) }}</span>
+              }
+              @if (task.fechaProgramada) {
+                <span>📅 {{ task.fechaProgramada | date:'dd/MM/yyyy' }}</span>
+              }
+              @if (task.duracionEstimada) {
+                <span>⏳ {{ task.duracionEstimada }} min estimados</span>
+              }
+            </div>
+          </div>
+          <div class="task-header-right">
+            <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+            <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <div class="left-col">
+
+            <div class="section-card">
+              <div class="section-header"><span> Descripción del trabajo</span></div>
+              @if (task.descripcion) {
+                <p class="desc-text">{{ task.descripcion }}</p>
+              } @else {
+                <p class="empty-text">Sin descripción registrada.</p>
+              }
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span> Material necesario</span></div>
+              @if (task.materiales.length) {
+                <ul class="material-list">
+                  @for (m of task.materiales; track $index) {
+                    <li>{{ m }}</li>
+                  }
+                </ul>
+              } @else {
+                <p class="empty-text">Sin materiales registrados.</p>
+              }
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span> Herramientas especiales</span></div>
+              <div class="equipo-input">
+                <input [(ngModel)]="newHerramienta"
+                       placeholder="Agregar herramienta..."
+                       (keyup.enter)="addHerramienta()"/>
+                <button (click)="addHerramienta()">+</button>
+              </div>
+              @if (task.herramientasEspeciales?.length) {
+                <div class="equipo-list">
+                  @for (h of task.herramientasEspeciales!; track $index; let i = $index) {
+                    <div class="equipo-item">
+                      <span>🛠️ {{ h }}</span>
+                      <button (click)="removeHerramienta(i)">✕</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="empty-text">Sin herramientas especiales.</p>
+              }
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span> Equipos</span></div>
+              <div class="equipo-input">
+                <input [(ngModel)]="newEquipoItem"
+                       placeholder="Agregar equipo..."
+                       (keyup.enter)="addEquipoItem()"/>
+                <button (click)="addEquipoItem()">+</button>
+              </div>
+              @if (task.equipos?.length) {
+                <div class="equipo-list">
+                  @for (e of task.equipos!; track $index; let i = $index) {
+                    <div class="equipo-item">
+                      <span>📦 {{ e }}</span>
+                      <button (click)="removeEquipoItem(i)">✕</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="empty-text">Sin equipos registrados.</p>
+              }
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span> Notas adicionales</span></div>
+              @if (task.notas) {
+                <p class="desc-text">{{ task.notas }}</p>
+              } @else {
+                <p class="empty-text">Sin notas adicionales.</p>
+              }
+            </div>
+
+          </div>
+
+          <div class="right-col">
+
+           <div class="section-card timer-card">
+  <div class="section-header"><span>Cronometro de actividad</span></div>
+  <div class="timer-display">{{ timerDisplay }}</div>
+
+  <div class="estado-tecnico-badge"
+       [class.en-sitio]="estadoTecnico === 'en_sitio'"
+       [class.en-traslado]="estadoTecnico === 'traslado'"
+       [class.disponible]="estadoTecnico === 'disponible'">
+    @if (estadoTecnico === 'disponible') { Sin iniciar }
+    @if (estadoTecnico === 'en_sitio') { En sitio }
+    @if (estadoTecnico === 'traslado') { En traslado }
+  </div>
+
+  <div class="timer-controls">
+    @if (!timerRunning && task.estado !== 'completada') {
+      <button class="btn-timer-start" (click)="startTimer()" [disabled]="guardandoEstado">
+        Iniciar — Llegar al sitio
+      </button>
+    }
+    @if (timerRunning && estadoTecnico === 'en_sitio') {
+      <button class="btn-timer-traslado" (click)="marcarEnTraslado()" [disabled]="guardandoEstado">
+        Saliendo del sitio
+      </button>
+    }
+    @if (timerRunning) {
+      <button class="btn-timer-stop" (click)="stopTimer()" [disabled]="guardandoEstado">
+        Finalizar servicio
+      </button>
+    }
+    @if (task.estado === 'completada') {
+      <div class="timer-done">Servicio completado</div>
+    }
+  </div>
+</div>
+
+            <!-- HOJA DE TRABAJO -->
+            <div class="section-card">
+              <div class="section-header"><span>📋 Hoja de trabajo</span></div>
+              <button class="btn-work-order" (click)="openWorkOrder()">
+                📝 Abrir hoja de trabajo
+              </button>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span> Cobranza</span></div>
+              <p class="monto">${{ task.monto | number }}</p>
+              <div class="payment-btns">
+                <button [class.active-pagado]="task.pago==='pagado'"
+                        (click)="updatePayment('pagado')">PAGADO</button>
+                <button [class.active-no-pagado]="task.pago==='no_pagado'"
+                        (click)="updatePayment('no_pagado')">NO PAGADO</button>
+                <button [class.active-abono]="task.pago==='abono'"
+                        (click)="updatePayment('abono')">ABONO</button>
+              </div>
+
+              @if (task.pago === 'abono') {
+                <div class="abono-section">
+                  <div class="abono-input">
+                    <label>Monto abonado ($)</label>
+                    <div class="abono-row">
+                      <input type="number" [(ngModel)]="montoAbonado"
+                             placeholder="0" min="0" [max]="task.monto"/>
+                      <button class="btn-save-abono" (click)="updatePayment('abono')">
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+                  <div class="abono-resumen">
+                    <div class="abono-item">
+                      <span>Total</span>
+                      <span class="abono-total">${{ task.monto | number }}</span>
+                    </div>
+                    <div class="abono-item">
+                      <span>Abonado</span>
+                      <span class="abono-pagado">${{ task.montoAbonado || 0 | number }}</span>
+                    </div>
+                    <div class="abono-item">
+                      <span>Pendiente</span>
+                      <span class="abono-pendiente">${{ montoPendiente | number }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <div class="cobro-section">
+                <div class="field-row">
+                  <div class="cobro-field">
+                    <label>Anticipo recibido ($)</label>
+                    <input type="number" [(ngModel)]="task.anticipoRecibido"
+                           placeholder="0" min="0" (change)="updateCobranza()"/>
+                  </div>
+                  <div class="cobro-field">
+                    <label>Saldo restante</label>
+                    <p class="saldo-restante">${{ (task.monto - (task.anticipoRecibido || 0)) | number }}</p>
+                  </div>
+                </div>
+                <div class="cobro-field" style="margin-top:10px">
+                  <label>Plan de cobro</label>
+                  <select [(ngModel)]="task.planCobro" (change)="updateCobranza()">
+                    <option value="al_finalizar">Cobro al finalizar el servicio</option>
+                    <option value="no_cobrar">No cobrar</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span> Números de serie</span></div>
+              <div class="equipo-input">
+                <input [(ngModel)]="newEquipo" placeholder="Agregar N° de serie..."
+                       (keyup.enter)="addEquipo()"/>
+                <button (click)="addEquipo()">+</button>
+              </div>
+              @if (task.equiposNumeroDeSerie.length) {
+                <div class="equipo-list">
+                  @for (e of task.equiposNumeroDeSerie; track $index; let i = $index) {
+                    <div class="equipo-item">
+                      <span>🔩 {{ e }}</span>
+                      <button (click)="removeEquipo(i)">✕</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="empty-text">Sin equipos registrados.</p>
+              }
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span>📊 Estado del servicio</span></div>
+              <div class="status-btns">
+                <button [class.active]="task.estado==='pendiente'"
+                        (click)="updateStatus('pendiente')">⏳ Pendiente</button>
+                <button [class.active-progress]="task.estado==='en_progreso'"
+                        (click)="updateStatus('en_progreso')">🔄 En progreso</button>
+                <button [class.active-done]="task.estado==='completada'"
+                        (click)="updateStatus('completada')">✅ Completada</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      }
+    </div>
+  </div>
+} @else {
+  <div class="loading"><p>Tarea no encontrada.</p></div>
+}

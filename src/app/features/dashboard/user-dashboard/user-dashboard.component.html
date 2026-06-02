@@ -1,0 +1,406 @@
+<div class="user-layout">
+
+  <nav class="navbar">
+    <div class="nav-left">
+      <svg width="32" height="32" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="22" fill="#1DA5A0"/>
+        <circle cx="24" cy="24" r="12" fill="#1E3A6E"/>
+        <circle cx="24" cy="24" r="5" fill="#111"/>
+        <circle cx="20" cy="20" r="3" fill="white" opacity="0.6"/>
+      </svg>
+      <span class="nav-title">Portal de Servicios</span>
+      <span class="nav-badge">Técnico</span>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon-btn" (click)="goToSchedule()">📅</button>
+      <button class="nav-icon-btn" (click)="goToReports()">📊</button>
+      <span class="nav-user">{{ currentUser?.nombre }}</span>
+      <button class="btn-logout" (click)="logout()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <div class="page-header">
+      <div>
+        <p class="date-label">{{ today | date:"EEEE, d 'de' MMMM 'de' yyyy" }}</p>
+        <h1>Mis tareas asignadas</h1>
+        <p class="welcome">Bienvenido, {{ currentUser?.nombre }}</p>
+      </div>
+    </div>
+
+    <!-- ASISTENCIA -->
+    <div class="attendance-card">
+      <div class="attendance-left">
+        <div class="attendance-status">
+          <span class="status-dot"
+                [class.green]="attendance?.estado === 'disponible' || attendance?.estado === 'en_sitio'"
+                [class.yellow]="attendance?.estado === 'traslado'"
+                [class.gray]="attendance === null || attendance!.estado === 'offline'">
+          </span>
+          <span class="status-label">{{ estadoLabel }}</span>
+        </div>
+        @if (attendance && attendance.entrada) {
+          <div class="attendance-times">
+            <span>🟢 Entrada: {{ formatTime(attendance.entrada) }}</span>
+            @if (attendance.salida) {
+              <span>🔴 Salida: {{ formatTime(attendance.salida) }}</span>
+            }
+          </div>
+        }
+      </div>
+      <div class="attendance-btns">
+        @if (!attendance || !attendance.entrada) {
+          <button class="btn-checkin" (click)="checkIn()" [disabled]="checkingIn">
+            {{ checkingIn ? 'Registrando...' : '🟢 Checar entrada' }}
+          </button>
+        } @else if (!attendance.salida) {
+          <button class="btn-checkout" (click)="checkOut()" [disabled]="checkingOut">
+            {{ checkingOut ? 'Registrando...' : '🔴 Checar salida' }}
+          </button>
+        } @else {
+          <span class="attendance-done">✅ Jornada registrada</span>
+        }
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric-card">
+        <span class="metric-num blue">{{ totalAsignadas }}</span>
+        <span class="metric-label">Total asignadas</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-num green">{{ completadas }}</span>
+        <span class="metric-label">Completadas</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-num gray">{{ tiempoTotal }}</span>
+        <span class="metric-label">Tiempo total</span>
+      </div>
+    </div>
+
+    @if (tiempoEstimadoHoy > 0) {
+      <div class="time-tracker">
+        <div class="time-tracker-header">
+          <span class="time-tracker-title">⏱ Progreso del día</span>
+          <span class="time-tracker-pct">{{ tiempoCompletadoHoy }}/{{ tiempoEstimadoHoy }} min</span>
+        </div>
+        <div class="time-bar">
+          <div class="time-bar-fill"
+               [style.width]="(tiempoEstimadoHoy > 0 ? (tiempoCompletadoHoy / tiempoEstimadoHoy) * 100 : 0) + '%'">
+          </div>
+        </div>
+        <div class="time-tracker-stats">
+          <span class="time-stat done">✅ Completado: {{ formatMinutos(tiempoCompletadoHoy) }}</span>
+          <span class="time-stat pending">⏳ Restante: {{ formatMinutos(tiempoRestanteHoy) }}</span>
+          <span class="time-stat total">📋 Total estimado: {{ formatMinutos(tiempoEstimadoHoy) }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- BUSCADOR -->
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input [(ngModel)]="searchQuery"
+             placeholder="Buscar por cliente, folio o dirección..."/>
+      @if (searchQuery) {
+        <button class="search-clear" (click)="searchQuery = ''">✕</button>
+      }
+    </div>
+
+    <!-- RESULTADOS DE BÚSQUEDA -->
+    @if (searchQuery) {
+      <div class="search-results-label">
+        {{ allFilteredTasks.length }} resultado(s) para "{{ searchQuery }}"
+      </div>
+      @if (allFilteredTasks.length > 0) {
+        <div class="tasks-grid">
+          @for (task of allFilteredTasks; track task.id) {
+            <div class="task-card" (click)="openTask(task.id!)">
+              <div class="task-card-header">
+                <span class="folio">{{ task.folioId }}</span>
+                <div class="stars">
+                  @for (s of stars(task.prioridad); track $index) {
+                    <span class="star filled">★</span>
+                  }
+                  @for (s of emptyStars(task.prioridad); track $index) {
+                    <span class="star">☆</span>
+                  }
+                </div>
+              </div>
+              <h3>{{ task.cliente }}</h3>
+              <p class="address">📍 {{ task.direccion }}</p>
+              <p class="desc">{{ task.descripcion || 'Sin descripción.' }}</p>
+              <div class="task-footer">
+                <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+                <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+                @if (task.fechaProgramada) {
+                  <span class="scheduled">📅 {{ task.fechaProgramada | date:"dd/MM/yyyy" }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <p class="empty-title">Sin resultados</p>
+          <p class="empty-sub">Intenta con otro término de búsqueda.</p>
+        </div>
+      }
+    } @else {
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'pendientes'"
+                (click)="activeTab = 'pendientes'">
+          ⏳ Hoy
+          <span class="tab-count">{{ pendingTasks.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'vencidas'"
+                (click)="activeTab = 'vencidas'">
+          ⚠️ Vencidas
+          <span class="tab-count" [class.red]="overdueTasks.length > 0">{{ overdueTasks.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'completadas'"
+                (click)="activeTab = 'completadas'">
+          ✅ Completadas
+          <span class="tab-count green">{{ completedTasks.length }}</span>
+        </button>
+      </div>
+
+      @if (activeTab === 'pendientes') {
+        @if (pendingTasks.length > 0) {
+          <div class="tasks-grid">
+            @for (task of pendingTasks; track task.id) {
+              <div class="task-card" [class.priority]="task.prioridad === 3"
+                   (click)="openTask(task.id!)">
+                <div class="task-card-header">
+                  <span class="folio">{{ task.folioId }}</span>
+                  <div class="stars">
+                    @for (s of stars(task.prioridad); track $index) {
+                      <span class="star filled">★</span>
+                    }
+                    @for (s of emptyStars(task.prioridad); track $index) {
+                      <span class="star">☆</span>
+                    }
+                  </div>
+                </div>
+                <h3>{{ task.cliente }}</h3>
+                <p class="address">📍 {{ task.direccion }}</p>
+                <p class="desc">{{ task.descripcion || 'Sin descripción.' }}</p>
+                <div class="task-footer">
+                  <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+                  @if (task.duracionEstimada) {
+                    <span class="scheduled">⏳ {{ task.duracionEstimada }}min</span>
+                  }
+                  @if (task.horaProgramada) {
+                    <span class="scheduled">🕐 {{ formatHora(task.horaProgramada) }}</span>
+                  }
+                  @if (task.fechaProgramada) {
+                    <span class="scheduled">📅 {{ task.fechaProgramada | date:"dd/MM/yyyy" }}</span>
+                  }
+                  @if (getTiempoStatus(task); as status) {
+                    <span class="time-status" [class]="status.clase">{{ status.label }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <div class="empty-icon">🎉</div>
+            <p class="empty-title">¡Sin tareas para hoy!</p>
+            <p class="empty-sub">No tienes tareas programadas para hoy.</p>
+          </div>
+        }
+      }
+
+      @if (activeTab === 'vencidas') {
+        @if (overdueTasks.length > 0) {
+          <div class="tasks-grid">
+            @for (task of overdueTasks; track task.id) {
+              <div class="task-card overdue" (click)="openTask(task.id!)">
+                <div class="task-card-header">
+                  <span class="folio">{{ task.folioId }}</span>
+                  <span class="overdue-badge">⚠️ Vencida</span>
+                </div>
+                <h3>{{ task.cliente }}</h3>
+                <p class="address">📍 {{ task.direccion }}</p>
+                <p class="desc">{{ task.descripcion || 'Sin descripción.' }}</p>
+                <div class="task-footer">
+                  <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+                  @if (task.fechaProgramada) {
+                    <span class="scheduled">📅 {{ task.fechaProgramada | date:"dd/MM/yyyy" }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <div class="empty-icon">✅</div>
+            <p class="empty-title">Sin tareas vencidas</p>
+            <p class="empty-sub">Estás al corriente con todas tus tareas.</p>
+          </div>
+        }
+      }
+
+      @if (activeTab === 'completadas') {
+        @if (completedTasks.length > 0) {
+          <div class="tasks-grid">
+            @for (task of completedTasks; track task.id) {
+              <div class="task-card completed" (click)="openTask(task.id!)">
+                <div class="task-card-header">
+                  <span class="folio">{{ task.folioId }}</span>
+                  <span class="done-icon">✅</span>
+                </div>
+                <h3>{{ task.cliente }}</h3>
+                <p class="address">📍 {{ task.direccion }}</p>
+                <p class="desc">{{ task.descripcion || 'Sin descripción.' }}</p>
+                <div class="task-footer">
+                  <span class="badge badge-completada">Completada</span>
+                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+                  @if (task.tiempoTotal) {
+                    <span class="scheduled">⏱ {{ task.tiempoTotal }}min</span>
+                  }
+                  @if (task.fechaProgramada) {
+                    <span class="scheduled">📅 {{ task.fechaProgramada | date:"dd/MM/yyyy" }}</span>
+                  }
+                  @if (getTiempoStatus(task); as status) {
+                    <span class="time-status" [class]="status.clase">{{ status.label }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p class="empty-title">Sin completadas aún</p>
+            <p class="empty-sub">Las tareas completadas aparecerán aquí.</p>
+          </div>
+        }
+      }
+
+    }
+
+    <div class="bottom-actions">
+      <button class="btn-schedule" (click)="goToSchedule()">
+        📅 Ver servicios próximos
+      </button>
+      <button class="btn-reports" (click)="goToReports()">
+        📊 Reportes y fallas
+      </button>
+      <button class="btn-revision" (click)="showRevisionModal = true">
+        🔍 Revisión para salir a campo
+      </button>
+      <button class="btn-pedido" (click)="showPedidoModal = true">
+        📦 Pedido de materiales
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL REVISIÓN -->
+@if (showRevisionModal) {
+  <div class="modal-overlay" (click)="showRevisionModal = false">
+    <div class="modal-revision" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>🔍 Revisión final — Salida a campo</h2>
+        <button (click)="showRevisionModal = false">✕</button>
+      </div>
+      <div class="modal-revision-body">
+        @if (tareasConMateriales.length > 0) {
+          @for (tarea of tareasConMateriales; track tarea.id) {
+            <div class="revision-task">
+              <div class="revision-task-header">
+                <span class="folio">{{ tarea.folioId }}</span>
+                <h3>{{ tarea.cliente }}</h3>
+                <span class="revision-hora">
+                  @if (tarea.horaProgramada) { 🕐 {{ formatHora(tarea.horaProgramada) }} }
+                </span>
+              </div>
+              @if (tarea.materiales.length) {
+                <div class="revision-section">
+                  <p class="revision-section-title">🔧 Materiales</p>
+                  <ul>
+                    @for (m of tarea.materiales; track $index) {
+                      <li>{{ m }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+              @if (tarea.herramientasEspeciales?.length) {
+                <div class="revision-section">
+                  <p class="revision-section-title">🛠️ Herramientas especiales</p>
+                  <ul>
+                    @for (h of tarea.herramientasEspeciales!; track $index) {
+                      <li>{{ h }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+              @if (tarea.equipos?.length) {
+                <div class="revision-section">
+                  <p class="revision-section-title">📦 Equipos</p>
+                  <ul>
+                    @for (e of tarea.equipos!; track $index) {
+                      <li>{{ e }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          }
+        } @else {
+          <div class="revision-empty">
+            <p>🎒 No hay materiales, herramientas ni equipos registrados para las tareas de hoy.</p>
+          </div>
+        }
+      </div>
+      <div class="modal-revision-footer">
+        <button class="btn-primary" (click)="showRevisionModal = false">
+          ✅ Listo, salir a campo
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL PEDIDO DE MATERIALES -->
+@if (showPedidoModal) {
+  <div class="modal-overlay" (click)="showPedidoModal = false">
+    <div class="modal-revision" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>📦 Pedido de materiales y consumibles</h2>
+        <button (click)="showPedidoModal = false">✕</button>
+      </div>
+      <div class="modal-revision-body">
+        <p class="pedido-desc">
+          Describe los materiales o consumibles que necesitas.
+          Se creará una tarea automáticamente en la agenda del administrador.
+        </p>
+        <textarea
+          [(ngModel)]="pedidoTexto"
+          rows="6"
+          placeholder="Ej: 2 rollos de cable UTP cat6, 1 caja de conectores RJ45, cinta de aislar negra..."
+          class="pedido-textarea">
+        </textarea>
+      </div>
+      <div class="modal-revision-footer" style="display:flex; gap:10px;">
+        <button class="btn-secondary" style="flex:1" (click)="showPedidoModal = false">
+          Cancelar
+        </button>
+        <button class="btn-primary" style="flex:2"
+                (click)="enviarPedido()"
+                [disabled]="!pedidoTexto.trim() || enviandoPedido">
+          {{ enviandoPedido ? 'Enviando...' : '📤 Enviar pedido al admin' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
