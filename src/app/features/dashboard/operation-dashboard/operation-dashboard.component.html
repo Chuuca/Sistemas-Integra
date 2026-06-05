@@ -45,7 +45,7 @@
     <!-- TABLA DE OPERACIÓN EN TIEMPO REAL -->
     <div class="section-card">
       <div class="section-header">
-        <h2>🔴 En vivo — Estado de técnicos</h2>
+        <h2>🔴 Colaboradores en tiempo real</h2>
         <span class="live-badge">● En tiempo real</span>
       </div>
 
@@ -53,10 +53,8 @@
         <div class="table-header">
           <span>Técnico</span>
           <span>Estado</span>
-          <span>Entrada</span>
-          <span>Salida</span>
-          <span>Tarea activa</span>
-          <span>Tareas hoy</span>
+          <span>Tiempo</span>
+          <span>Cliente</span>
         </div>
 
         @for (user of users; track user.uid) {
@@ -71,32 +69,10 @@
               </span>
             </div>
             <div class="col-time">
-              {{ formatTime(getAttendance(user.uid)?.entrada) }}
-            </div>
-            <div class="col-time">
-              {{ formatTime(getAttendance(user.uid)?.salida) }}
+              {{ getElapsedTime(user.uid) }}
             </div>
             <div class="col-tarea">
-              @if (getTareaActiva(user.uid); as tarea) {
-                <div class="tarea-activa">
-                  <span class="folio-small">{{ tarea.folioId }}</span>
-                  <span class="cliente-small">{{ tarea.cliente }}</span>
-                </div>
-              } @else {
-                <span class="sin-tarea">—</span>
-              }
-            </div>
-            <div class="col-progress">
-              <span class="progress-text">
-                {{ getTareasHoyUser(user.uid).filter(t => t.estado === 'completada').length }}/{{ getTareasHoyUser(user.uid).length }}
-              </span>
-              @if (getTareasHoyUser(user.uid).length > 0) {
-                <div class="mini-bar">
-                  <div class="mini-bar-fill"
-                       [style.width]="(getTareasHoyUser(user.uid).filter(t => t.estado === 'completada').length / getTareasHoyUser(user.uid).length * 100) + '%'">
-                  </div>
-                </div>
-              }
+              {{ getClienteActivo(user.uid) }}
             </div>
           </div>
         }
@@ -112,7 +88,7 @@
     <!-- LOG DE ASISTENCIA -->
     <div class="section-card">
       <div class="section-header">
-        <h2>📋 Log de asistencia — Hoy</h2>
+        <h2>📋 Registro de asistencia - HOY</h2>
       </div>
       @if (attendance.length > 0) {
         <div class="attendance-log">
@@ -137,6 +113,36 @@
       } @else {
         <div class="log-empty">
           <p>Ningún técnico ha checado entrada hoy.</p>
+        </div>
+      }
+    </div>
+
+    <!-- TAREAS COMPLETADAS DEL DÍA -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>✅ Tareas completadas hoy</h2>
+      </div>
+      @if (tareasCompletadasHoy.length > 0) {
+        <div class="attendance-log">
+          @for (tarea of tareasCompletadasHoy; track tarea.id) {
+            <div class="log-row">
+              <div class="log-info">
+                <span class="log-nombre">{{ tarea.cliente }}</span>
+                <div class="log-times">
+                  <span class="folio-small">{{ tarea.folioId }}</span>
+                  <span class="log-entrada">👤 {{ tarea.asignadoNombre }}</span>
+                  @if (tarea.tiempoTotal) {
+                    <span class="log-entrada">⏱ {{ tarea.tiempoTotal }} min</span>
+                  }
+                </div>
+              </div>
+              <span class="log-estado estado-completada">✅ Completada</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="log-empty">
+          <p>Ninguna tarea completada aún hoy.</p>
         </div>
       }
     </div>

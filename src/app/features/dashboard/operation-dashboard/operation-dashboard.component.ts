@@ -31,7 +31,10 @@ export class OperationDashboardComponent implements OnInit, OnDestroy {
   private tasksSub?: Subscription;
   private usersSub?: Subscription;
 
+  private timerInterval?: any;
+
   ngOnInit() {
+    this.timerInterval = setInterval(() => this.cdr.detectChanges(), 30000);
     this.attendanceSub = this.attendanceService.getTodayAll().subscribe(a => {
       this.attendance = a.map(att => ({
         ...att,
@@ -56,6 +59,7 @@ export class OperationDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
     this.attendanceSub?.unsubscribe();
     this.tasksSub?.unsubscribe();
     this.usersSub?.unsubscribe();
@@ -147,6 +151,21 @@ export class OperationDashboardComponent implements OnInit, OnDestroy {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+
+  getElapsedTime(uid: string): string {
+    const att = this.getAttendance(uid);
+    if (!att?.entrada) return '--';
+    const entrada = att.entrada instanceof Date ? att.entrada : new Date(att.entrada as any);
+    const salida = att.salida ? (att.salida instanceof Date ? att.salida : new Date(att.salida as any)) : new Date();
+    const mins = Math.floor((salida.getTime() - entrada.getTime()) / 60000);
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 ? `${h}:${String(m).padStart(2,'0')}` : `${m}m`;
+  }
+
+  getClienteActivo(uid: string): string {
+    return this.getTareaActiva(uid)?.cliente || '—';
   }
 
   goBack() { this.router.navigate(['/admin']); }

@@ -37,6 +37,9 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   checkingIn = false;
   checkingOut = false;
 
+  // ── Reporte de salida ──────────────────────────────────────
+  showReporteModal = false;
+
   // ── Pedido de materiales ───────────────────────────────────
   showPedidoModal = false;
   pedidoTexto = '';
@@ -112,11 +115,16 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
       if (this.attendance) {
         this.attendance = { ...this.attendance, salida: new Date(), estado: 'offline' };
       }
+      this.showReporteModal = true;
     } catch (e) {
       console.error('Error checkOut:', e);
     }
     this.checkingOut = false;
     this.cdr.detectChanges();
+  }
+
+  abrirWhatsApp() {
+    window.open('https://wa.me/', '_blank');
   }
 
   get estadoLabel(): string {
@@ -336,6 +344,25 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     if (diff > 0) return { label: `+${diff}min sobre el tiempo`, clase: 'time-over' };
     if (diff < 0) return { label: `${Math.abs(diff)}min ahorrados`, clase: 'time-under' };
     return { label: 'Justo a tiempo', clase: 'time-exact' };
+  }
+
+  async enviarReporteEmail() {
+    if (!this.currentUser?.email) return;
+    try {
+      const emailjs = (await import('@emailjs/browser')).default;
+      const completadas = this.completedTasks.length;
+      const tiempo = this.tiempoTotal;
+      await emailjs.send('service_2hdign8', 'template_fwiao48', {
+        nombre_cliente: this.currentUser.nombre,
+        sistema: `Reporte del día — ${new Date().toLocaleDateString('es-MX')}`,
+        contrasena: '-',
+        clave_cifrado: '-',
+        notas_acceso: `Tareas completadas: ${completadas} | Tiempo total: ${tiempo}`,
+        to_email: this.currentUser.email,
+      }, 'XEGieclndH5Y3ZVp_');
+    } catch (e) {
+      console.error('Error enviando reporte:', e);
+    }
   }
 
   // ── Navegación ─────────────────────────────────────────────

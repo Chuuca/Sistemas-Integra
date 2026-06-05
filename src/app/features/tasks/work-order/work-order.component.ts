@@ -184,133 +184,134 @@ export class WorkOrderComponent implements OnInit {
     firmaColaborador: '', calificacion: 0, solicitaSeguimiento: false,
     comentarios: '', nombreFirmaCliente: '',
   };
+
   labDiagnostico = {
-  ingeniero: '', cliente: '', marcaModelo: '', numeroSerie: '',
-  tipoGarantia: false, tipoReparacion: false, tipoRevision: false,
-  sinDanosVisibles: false, golpesDetectados: false, humedadDetectada: false,
-  sulfatacionDetectada: false, componentesFaltantes: false,
-  sellosGarantiaDanados: false, manipulacionPreviaDetectada: false,
-  otroEstadoFisico: '', observacionesEstado: '',
-  enciendeCorrectamente: false, noEnciende: false,
-  fuentePoderFuncional: false, fuentePoderDefectuosa: false,
-  comunicacionCorrecta: false, comunicacionIntermitente: false,
-  sinComunicacion: false, comunicacionNoAplica: false,
-  operaCorrectamente: false, fallaEnTodo: false, fallaIntermitente: false,
-  errorConfiguracion: false, firmwareDesactualizado: false,
-  firmwareCorrupto: false, danoFisicoInterno: false,
-  danoPorDescargaElectrica: false, danoPorHumedad: false, noSeDetectoFalla: false,
-  descripcionFalla: '',
-  fotografiasInternas: false, fotografiasComponentesDanados: false,
-  videoFuncionamiento: false, evidenciaWhatsapp: false,
-  accionReconfiguracion: false, accionActualizacionFirmware: false,
-  accionReparacionInterna: false, accionReemplazoComponente: false,
-  accionReemplazoTotal: false, accionEnvioGarantia: false,
-  accionSinReparacion: false, accionNoReparable: false,
-  noRequiereRefacciones: false, siRequiereRefacciones: false,
-  descripcionRefacciones: '', costoEstimado: 0, costoManoObra: 0,
-  resultadoReparado: false, resultadoPendienteGarantia: false,
-  resultadoPendienteRefacciones: false, resultadoEnviarProveedor: false,
-  resultadoGarantiaCobertura: false, resultadoGarantiaRechazada: false,
-  resultadoListoEntrega: false, resultadoNoReparable: false,
-  horasInvertidas: 0, dictamenTecnico: '', firmaTecnico: '',
-  correoEnvioCotizacion: '',
-};
+    ingeniero: '', cliente: '', marcaModelo: '', numeroSerie: '',
+    tipoGarantia: false, tipoReparacion: false, tipoRevision: false,
+    sinDanosVisibles: false, golpesDetectados: false, humedadDetectada: false,
+    sulfatacionDetectada: false, componentesFaltantes: false,
+    sellosGarantiaDanados: false, manipulacionPreviaDetectada: false,
+    otroEstadoFisico: '', observacionesEstado: '',
+    enciendeCorrectamente: false, noEnciende: false,
+    fuentePoderFuncional: false, fuentePoderDefectuosa: false,
+    comunicacionCorrecta: false, comunicacionIntermitente: false,
+    sinComunicacion: false, comunicacionNoAplica: false,
+    operaCorrectamente: false, fallaEnTodo: false, fallaIntermitente: false,
+    errorConfiguracion: false, firmwareDesactualizado: false,
+    firmwareCorrupto: false, danoFisicoInterno: false,
+    danoPorDescargaElectrica: false, danoPorHumedad: false, noSeDetectoFalla: false,
+    descripcionFalla: '',
+    fotografiasInternas: false, fotografiasComponentesDanados: false,
+    videoFuncionamiento: false, evidenciaWhatsapp: false,
+    accionReconfiguracion: false, accionActualizacionFirmware: false,
+    accionReparacionInterna: false, accionReemplazoComponente: false,
+    accionReemplazoTotal: false, accionEnvioGarantia: false,
+    accionSinReparacion: false, accionNoReparable: false,
+    noRequiereRefacciones: false, siRequiereRefacciones: false,
+    descripcionRefacciones: '', costoEstimado: 0, costoManoObra: 0,
+    resultadoReparado: false, resultadoPendienteGarantia: false,
+    resultadoPendienteRefacciones: false, resultadoEnviarProveedor: false,
+    resultadoGarantiaCobertura: false, resultadoGarantiaRechazada: false,
+    resultadoListoEntrega: false, resultadoNoReparable: false,
+    horasInvertidas: 0, dictamenTecnico: '', firmaTecnico: '',
+    correoEnvioCotizacion: '',
+  };
 
-reciboEquipo = {
-  colaborador: '', cliente: '', telefono: '', direccionEnvio: '',
-  correoElectronico: '', marcaModelo: '', sn: '', contraseniaCliente: '', direccionIP: '',
-  prioridadBaja: false, prioridadMedia: false, prioridadAlta: false, prioridadCritica: false,
-  tiempoEstimado: '', descripcionFalla: '',
-  tipoGarantia: false, tipoReparacion: false, tipoRevision: false, tipoDevolucion: false,
-  cajaOriginal: false, cablesConexion: false, baseMontaje: false,
-  bateria: false, fuentePoder: false, otroAccesorio: '',
-  estadoEnciende: false, estadoNoEnciende: false, estadoNoPosibleProbar: false,
-  huelaQuemado: false, estaGolpeado: false, estaQuebrado: false,
-  pantallaRota: false, estaRaspado: false, faltanTornillos: false,
-  indiciosHumedad: false, etiquetasDanadas: false, otroEstado: '',
-  nombreFirmaCliente: '',
-};
+  reciboEquipo = {
+    colaborador: '', cliente: '', telefono: '', direccionEnvio: '',
+    correoElectronico: '', marcaModelo: '', sn: '', contraseniaCliente: '', direccionIP: '',
+    prioridadBaja: false, prioridadMedia: false, prioridadAlta: false, prioridadCritica: false,
+    tiempoEstimado: '', descripcionFalla: '',
+    tipoGarantia: false, tipoReparacion: false, tipoRevision: false, tipoDevolucion: false,
+    cajaOriginal: false, cablesConexion: false, baseMontaje: false,
+    bateria: false, fuentePoder: false, otroAccesorio: '',
+    estadoEnciende: false, estadoNoEnciende: false, estadoNoPosibleProbar: false,
+    huelaQuemado: false, estaGolpeado: false, estaQuebrado: false,
+    pantallaRota: false, estaRaspado: false, faltanTornillos: false,
+    indiciosHumedad: false, etiquetasDanadas: false, otroEstado: '',
+    nombreFirmaCliente: '',
+  };
 
-posInstalacion = {
-  limpiezaAreas: false, revisionConexiones: false, cableadoOrganizado: false,
-  alimentacionVerificada: false, comunicacionVerificada: false,
-  internetVerificado: false, pruebasVenta: false, perifericosVerificados: false,
-  cantidadTerminalesPOS: 0, cantidadCajas: 0, cantidadPantallasCliente: 0,
-  cantidadImpresoras: 0, cantidadBasculas: 0, cantidadEtiquetadoras: 0,
-  cantidadChecadores: 0, cantidadKioskos: 0, cantidadTabletas: 0,
-  materialesAdicionales: '',
-  usuarioAdmin: '', contrasenaAdmin: '', contrasenaWindows: '',
-  datosLicencia: '', otrasCredenciales: '', firmaSupervisor: '',
-  sistemaOperativoVerificado: false, accesoUsuariosVerificado: false,
-  officeRemotoVerificado: false, sistemaFuncionaNormal: false,
-  perifericosFuncionan: false, impresionTicketsVerificada: false,
-  cajonDineroVerificado: false, basculaVerificada: false,
-  etiquetasVerificadas: false, checadorVerificado: false,
-  sincronizacionNube: false, respaldoAutomatico: false,
-  reportesAutomaticos: false, terminalesMoviles: false,
-  fechaHoraVerificada: false,
-  internetBajada: '', internetSubida: '', correosReportes: '', recomendaciones: '',
-  capAltaProductos: false, capInventario: false, capVentaCobro: false,
-  capCortesCaja: false, capImpresionTickets: false, capBascula: false,
-  capEtiquetadora: false, capReportes: false, capUsuariosPermisos: false,
-  demostracionRealizada: false, pruebasVentaCliente: false,
-  canalizacionProfesional: false, accesoSistema: false,
-  capacitacionRecibida: false, personalProfesional: false,
-  sabesolicitarSoporte: false, entiendeLimitesGarantia: false,
-  entiendeDanosExternos: false,
-  calificacion: 0, nps: '', solicitaSeguimiento: false, comentarios: '', nombreFirmaCliente: '',
-};
+  posInstalacion = {
+    limpiezaAreas: false, revisionConexiones: false, cableadoOrganizado: false,
+    alimentacionVerificada: false, comunicacionVerificada: false,
+    internetVerificado: false, pruebasVenta: false, perifericosVerificados: false,
+    cantidadTerminalesPOS: 0, cantidadCajas: 0, cantidadPantallasCliente: 0,
+    cantidadImpresoras: 0, cantidadBasculas: 0, cantidadEtiquetadoras: 0,
+    cantidadChecadores: 0, cantidadKioskos: 0, cantidadTabletas: 0,
+    materialesAdicionales: '',
+    usuarioAdmin: '', contrasenaAdmin: '', contrasenaWindows: '',
+    datosLicencia: '', otrasCredenciales: '', firmaSupervisor: '',
+    sistemaOperativoVerificado: false, accesoUsuariosVerificado: false,
+    officeRemotoVerificado: false, sistemaFuncionaNormal: false,
+    perifericosFuncionan: false, impresionTicketsVerificada: false,
+    cajonDineroVerificado: false, basculaVerificada: false,
+    etiquetasVerificadas: false, checadorVerificado: false,
+    sincronizacionNube: false, respaldoAutomatico: false,
+    reportesAutomaticos: false, terminalesMoviles: false,
+    fechaHoraVerificada: false,
+    internetBajada: '', internetSubida: '', correosReportes: '', recomendaciones: '',
+    capAltaProductos: false, capInventario: false, capVentaCobro: false,
+    capCortesCaja: false, capImpresionTickets: false, capBascula: false,
+    capEtiquetadora: false, capReportes: false, capUsuariosPermisos: false,
+    demostracionRealizada: false, pruebasVentaCliente: false,
+    canalizacionProfesional: false, accesoSistema: false,
+    capacitacionRecibida: false, personalProfesional: false,
+    sabesolicitarSoporte: false, entiendeLimitesGarantia: false,
+    entiendeDanosExternos: false,
+    calificacion: 0, nps: '', solicitaSeguimiento: false, comentarios: '', nombreFirmaCliente: '',
+  };
 
-canalizacion = {
-  limpiezaAreas: false, retiroResiduos: false, tuberiaFirme: false,
-  tuberiaCorrctamenteFijada: false, alineacionEstetica: false,
-  metrosTuberia: 0, cantidadRegistros: 0, cantidadCurvas: 0,
-  cantidadCajasCondulet: 0, cantidadAbrazaderas: 0, cantidadLicuatite: 0,
-  materialesAdicionales: '', detalleTrabajoRealizado: '', firmaTecnico: '',
-};
+  canalizacion = {
+    limpiezaAreas: false, retiroResiduos: false, tuberiaFirme: false,
+    tuberiaCorrctamenteFijada: false, alineacionEstetica: false,
+    metrosTuberia: 0, cantidadRegistros: 0, cantidadCurvas: 0,
+    cantidadCajasCondulet: 0, cantidadAbrazaderas: 0, cantidadLicuatite: 0,
+    materialesAdicionales: '', detalleTrabajoRealizado: '', firmaTecnico: '',
+  };
 
-cctvServicio = {
-  limpiezaAreas: false, revisionConexiones: false, grabadorLimpio: false,
-  cableadoIdentificado: false, alimentacionVerificada: false,
-  comunicacionVerificada: false, pruebasVisualizacion: false,
-  estadoSistemaDocumentado: false,
-  camarasConVideo: 0, camarasMantenimiento: 0, camarasReemplazadas: 0, camarasSinVideo: 0,
-  capacidadAlmacenamiento: '', materialesAdicionales: '', refaccionesUtilizadas: '',
-  nSerieGrabador: '', contrasenaGrabador: '', contrasenaHikConnect: '',
-  correoAsociado: '', otrosDatosCredenciales: '', firmaSupervisor: '',
-  detalleCliente: '', trabajosRealizados: '',
-  camarasVisualizando: false, grabacionConfigurada: false,
-  grabacionesVerificadas: false, reproduccionVerificada: false,
-  fechaHoraVerificada: false, discoVerificado: false,
-  videoMonitorCliente: false, accesoRemotoVerificado: false,
-  notificacionesVerificadas: false, microfonoLuzBlanca: false,
-  analiticosVerificados: false, upsVerificado: false, switchesPoEVerificados: false,
-  diagnosticoConfiguracion: false, diagnosticoFuentePoder: false,
-  diagnosticoCamara: false, diagnosticoCableado: false,
-  diagnosticoConectores: false, diagnosticoDiscoDuro: false,
-  diagnosticoRed: false, diagnosticoInternet: false,
-  diagnosticoElectrico: false, diagnosticoSinFalla: false, diagnosticoOtro: '',
-  internetBajada: '', internetSubida: '',
-  tiempoGrabacion: '', ubicacionGrabador: '', recomendaciones: '',
-  accionSustitucionCamaras: false, accionSustitucionDisco: false,
-  accionSustitucionUPS: false, accionSustitucionFuente: false,
-  accionMejoraAlmacenamiento: false, accionMantenimiento: false,
-  accionPolizaServicio: false, accionOtra: '',
-  demostracionRealizada: false, visualizacionGrabaciones: false,
-  explicacionFallas: false, canalizacionProfesional: false,
-  accesoHikConnect: false, explicacionCondiciones: false,
-  personalProfesional: false, sabesolicitarSoporte: false,
-  entiendeEquiposExistentes: false, entiendeLimitesGarantia: false,
-  calificacion: 0, nps: '', solicitaSeguimiento: false, comentarios: '', nombreFirmaCliente: '',
-};
+  cctvServicio = {
+    limpiezaAreas: false, revisionConexiones: false, grabadorLimpio: false,
+    cableadoIdentificado: false, alimentacionVerificada: false,
+    comunicacionVerificada: false, pruebasVisualizacion: false,
+    estadoSistemaDocumentado: false,
+    camarasConVideo: 0, camarasMantenimiento: 0, camarasReemplazadas: 0, camarasSinVideo: 0,
+    capacidadAlmacenamiento: '', materialesAdicionales: '', refaccionesUtilizadas: '',
+    nSerieGrabador: '', contrasenaGrabador: '', contrasenaHikConnect: '',
+    correoAsociado: '', otrosDatosCredenciales: '', firmaSupervisor: '',
+    detalleCliente: '', trabajosRealizados: '',
+    camarasVisualizando: false, grabacionConfigurada: false,
+    grabacionesVerificadas: false, reproduccionVerificada: false,
+    fechaHoraVerificada: false, discoVerificado: false,
+    videoMonitorCliente: false, accesoRemotoVerificado: false,
+    notificacionesVerificadas: false, microfonoLuzBlanca: false,
+    analiticosVerificados: false, upsVerificado: false, switchesPoEVerificados: false,
+    diagnosticoConfiguracion: false, diagnosticoFuentePoder: false,
+    diagnosticoCamara: false, diagnosticoCableado: false,
+    diagnosticoConectores: false, diagnosticoDiscoDuro: false,
+    diagnosticoRed: false, diagnosticoInternet: false,
+    diagnosticoElectrico: false, diagnosticoSinFalla: false, diagnosticoOtro: '',
+    internetBajada: '', internetSubida: '',
+    tiempoGrabacion: '', ubicacionGrabador: '', recomendaciones: '',
+    accionSustitucionCamaras: false, accionSustitucionDisco: false,
+    accionSustitucionUPS: false, accionSustitucionFuente: false,
+    accionMejoraAlmacenamiento: false, accionMantenimiento: false,
+    accionPolizaServicio: false, accionOtra: '',
+    demostracionRealizada: false, visualizacionGrabaciones: false,
+    explicacionFallas: false, canalizacionProfesional: false,
+    accesoHikConnect: false, explicacionCondiciones: false,
+    personalProfesional: false, sabesolicitarSoporte: false,
+    entiendeEquiposExistentes: false, entiendeLimitesGarantia: false,
+    calificacion: 0, nps: '', solicitaSeguimiento: false, comentarios: '', nombreFirmaCliente: '',
+  };
 
-enviandoCotizacion = false;
-enviandoReciboCliente = false;
-enviandoReciboIngenieria = false;
+  enviandoCotizacion = false;
+  enviandoReciboCliente = false;
+  enviandoReciboIngenieria = false;
 
-  tiposServicio = ['Diagnostico','Correctivo','Preventivo','Garantia','Capacitacion','Reconfiguracion','Otro'];
-  sistemasAtendidos = ['CCTV','Alarma','Redes/WiFi','Soft Restaurant','Control de acceso','Audio','Telefonia IP','Otro'];
-  actividadesOpciones = ['Reinicio de sistema','Reconfiguracion','Limpieza de equipo','Cambio de configuracion','Actualizacion firmware','Correccion de cableado','Sustitucion de equipo','Capacitacion','Pruebas funcionales','Otro'];
+  tiposServicio = ['Diagnostico', 'Correctivo', 'Preventivo', 'Garantia', 'Capacitacion', 'Reconfiguracion', 'Otro'];
+  sistemasAtendidos = ['CCTV', 'Alarma', 'Redes/WiFi', 'Soft Restaurant', 'Control de acceso', 'Audio', 'Telefonia IP', 'Otro'];
+  actividadesOpciones = ['Reinicio de sistema', 'Reconfiguracion', 'Limpieza de equipo', 'Cambio de configuracion', 'Actualizacion firmware', 'Correccion de cableado', 'Sustitucion de equipo', 'Capacitacion', 'Pruebas funcionales', 'Otro'];
 
   ngOnInit() {
     const tareaId = this.route.snapshot.paramMap.get('id');
@@ -327,11 +328,12 @@ enviandoReciboIngenieria = false;
             ...t,
             fechaProgramada: (t.fechaProgramada as any)?.toDate?.() ?? t.fechaProgramada,
           };
+          this.reciboEquipo.cliente = t.cliente || '';
+          this.labDiagnostico.cliente = t.cliente || '';
 
           const hojas = await this.workOrderService.getByTarea(tareaId);
           if (hojas.length > 0) {
             this.hojasGuardadas = hojas;
-            // Precargar TODAS las firmas indexadas por tipo
             for (const h of hojas) {
               const firma = (h as any).firmaCliente || '';
               if (firma) this.firmasPorTipo[h.tipo] = firma;
@@ -353,75 +355,76 @@ enviandoReciboIngenieria = false;
     this.tipoSeleccionado = tipo as WorkOrderType;
     this.cdr.detectChanges();
   }
+
   copiarFolio() {
-  navigator.clipboard.writeText(this.task?.folioId || '').then(() => {
-    alert('Folio copiado');
-  });
-}
-
-abrirWhatsapp() {
-  const msg = `Folio: ${this.task?.folioId || ''} | Cliente: ${this.task?.cliente || ''}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-async enviarCotizacion() {
-  if (!this.labDiagnostico.correoEnvioCotizacion) {
-    alert('Escribe el correo de destino');
-    return;
+    navigator.clipboard.writeText(this.task?.folioId || '').then(() => {
+      alert('Folio copiado');
+    });
   }
-  this.enviandoCotizacion = true;
-  try {
-    await emailjs.send('service_2hdign8', 'template_fwiao48', {
-      nombre_cliente: this.labDiagnostico.cliente,
-      sistema: `Diagnostico ${this.labDiagnostico.marcaModelo}`,
-      contrasena: '-',
-      clave_cifrado: '-',
-      notas_acceso: `Costo estimado: $${this.labDiagnostico.costoEstimado} | MO: $${this.labDiagnostico.costoManoObra} | ${this.labDiagnostico.dictamenTecnico}`,
-      to_email: 'sistemasintegra.ventas@gmail.com',
-    }, 'XEGieclndH5Y3ZVp_');
-    alert('Cotizacion enviada a ventas');
-  } catch (e) { console.error(e); alert('Error al enviar'); }
-  this.enviandoCotizacion = false;
-  this.cdr.detectChanges();
-}
 
-async enviarReciboCliente() {
-  if (!this.reciboEquipo.correoElectronico) {
-    alert('El correo del cliente es obligatorio');
-    return;
+  abrirWhatsapp() {
+    const msg = `Folio: ${this.task?.folioId || ''} | Cliente: ${this.task?.cliente || ''}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   }
-  this.enviandoReciboCliente = true;
-  try {
-    await emailjs.send('service_2hdign8', 'template_fwiao48', {
-      nombre_cliente: this.reciboEquipo.cliente,
-      sistema: `Recibo de equipo: ${this.reciboEquipo.marcaModelo}`,
-      contrasena: '-',
-      clave_cifrado: '-',
-      notas_acceso: `Falla reportada: ${this.reciboEquipo.descripcionFalla}`,
-      to_email: this.reciboEquipo.correoElectronico,
-    }, 'XEGieclndH5Y3ZVp_');
-    alert('Copia enviada al cliente');
-  } catch (e) { console.error(e); alert('Error al enviar'); }
-  this.enviandoReciboCliente = false;
-  this.cdr.detectChanges();
-}
 
-async enviarReciboIngenieria() {
-  this.enviandoReciboIngenieria = true;
-  try {
-    await emailjs.send('service_2hdign8', 'template_fwiao48', {
-      nombre_cliente: this.reciboEquipo.cliente,
-      sistema: `Recibo de equipo: ${this.reciboEquipo.marcaModelo} SN: ${this.reciboEquipo.sn}`,
-      contrasena: this.reciboEquipo.contraseniaCliente || '-',
-      clave_cifrado: '-',
-      notas_acceso: `Falla: ${this.reciboEquipo.descripcionFalla} | Folio: ${this.task?.folioId}`,
-      to_email: 'sistemasintegra.ingenieria@gmail.com',
-    }, 'XEGieclndH5Y3ZVp_');
-    alert('Copia enviada a ingenieria');
-  } catch (e) { console.error(e); alert('Error al enviar'); }
-  this.enviandoReciboIngenieria = false;
-  this.cdr.detectChanges();
-}
+  async enviarCotizacion() {
+    if (!this.labDiagnostico.correoEnvioCotizacion) {
+      alert('Escribe el correo de destino');
+      return;
+    }
+    this.enviandoCotizacion = true;
+    try {
+      await emailjs.send('service_2hdign8', 'template_fwiao48', {
+        nombre_cliente: this.labDiagnostico.cliente,
+        sistema: `Diagnostico ${this.labDiagnostico.marcaModelo}`,
+        contrasena: '-',
+        clave_cifrado: '-',
+        notas_acceso: `Costo estimado: $${this.labDiagnostico.costoEstimado} | MO: $${this.labDiagnostico.costoManoObra} | ${this.labDiagnostico.dictamenTecnico}`,
+        to_email: 'sistemasintegra.ventas@gmail.com',
+      }, 'XEGieclndH5Y3ZVp_');
+      alert('Cotizacion enviada a ventas');
+    } catch (e) { console.error(e); alert('Error al enviar'); }
+    this.enviandoCotizacion = false;
+    this.cdr.detectChanges();
+  }
+
+  async enviarReciboCliente() {
+    if (!this.reciboEquipo.correoElectronico) {
+      alert('El correo del cliente es obligatorio');
+      return;
+    }
+    this.enviandoReciboCliente = true;
+    try {
+      await emailjs.send('service_2hdign8', 'template_fwiao48', {
+        nombre_cliente: this.reciboEquipo.cliente,
+        sistema: `Recibo de equipo: ${this.reciboEquipo.marcaModelo}`,
+        contrasena: '-',
+        clave_cifrado: '-',
+        notas_acceso: `Falla reportada: ${this.reciboEquipo.descripcionFalla}`,
+        to_email: this.reciboEquipo.correoElectronico,
+      }, 'XEGieclndH5Y3ZVp_');
+      alert('Copia enviada al cliente');
+    } catch (e) { console.error(e); alert('Error al enviar'); }
+    this.enviandoReciboCliente = false;
+    this.cdr.detectChanges();
+  }
+
+  async enviarReciboIngenieria() {
+    this.enviandoReciboIngenieria = true;
+    try {
+      await emailjs.send('service_2hdign8', 'template_fwiao48', {
+        nombre_cliente: this.reciboEquipo.cliente,
+        sistema: `Recibo de equipo: ${this.reciboEquipo.marcaModelo} SN: ${this.reciboEquipo.sn}`,
+        contrasena: this.reciboEquipo.contraseniaCliente || '-',
+        clave_cifrado: '-',
+        notas_acceso: `Falla: ${this.reciboEquipo.descripcionFalla} | Folio: ${this.task?.folioId}`,
+        to_email: 'sistemasintegra.ingenieria@gmail.com',
+      }, 'XEGieclndH5Y3ZVp_');
+      alert('Copia enviada a ingenieria');
+    } catch (e) { console.error(e); alert('Error al enviar'); }
+    this.enviandoReciboIngenieria = false;
+    this.cdr.detectChanges();
+  }
 
   toggleTipoMultiple(tipo: WorkOrderType) {
     const idx = this.tiposSeleccionados.indexOf(tipo);
@@ -586,117 +589,117 @@ async enviarReciboIngenieria() {
       comentarios: '', nombreFirmaCliente: '',
     };
     this.labDiagnostico = {
-  ingeniero: '', cliente: '', marcaModelo: '', numeroSerie: '',
-  tipoGarantia: false, tipoReparacion: false, tipoRevision: false,
-  sinDanosVisibles: false, golpesDetectados: false, humedadDetectada: false,
-  sulfatacionDetectada: false, componentesFaltantes: false,
-  sellosGarantiaDanados: false, manipulacionPreviaDetectada: false,
-  otroEstadoFisico: '', observacionesEstado: '',
-  enciendeCorrectamente: false, noEnciende: false,
-  fuentePoderFuncional: false, fuentePoderDefectuosa: false,
-  comunicacionCorrecta: false, comunicacionIntermitente: false,
-  sinComunicacion: false, comunicacionNoAplica: false,
-  operaCorrectamente: false, fallaEnTodo: false, fallaIntermitente: false,
-  errorConfiguracion: false, firmwareDesactualizado: false,
-  firmwareCorrupto: false, danoFisicoInterno: false,
-  danoPorDescargaElectrica: false, danoPorHumedad: false, noSeDetectoFalla: false,
-  descripcionFalla: '',
-  fotografiasInternas: false, fotografiasComponentesDanados: false,
-  videoFuncionamiento: false, evidenciaWhatsapp: false,
-  accionReconfiguracion: false, accionActualizacionFirmware: false,
-  accionReparacionInterna: false, accionReemplazoComponente: false,
-  accionReemplazoTotal: false, accionEnvioGarantia: false,
-  accionSinReparacion: false, accionNoReparable: false,
-  noRequiereRefacciones: false, siRequiereRefacciones: false,
-  descripcionRefacciones: '', costoEstimado: 0, costoManoObra: 0,
-  resultadoReparado: false, resultadoPendienteGarantia: false,
-  resultadoPendienteRefacciones: false, resultadoEnviarProveedor: false,
-  resultadoGarantiaCobertura: false, resultadoGarantiaRechazada: false,
-  resultadoListoEntrega: false, resultadoNoReparable: false,
-  horasInvertidas: 0, dictamenTecnico: '', firmaTecnico: '', correoEnvioCotizacion: '',
-};
-this.reciboEquipo = {
-  colaborador: '', cliente: '', telefono: '', direccionEnvio: '',
-  correoElectronico: '', marcaModelo: '', sn: '', contraseniaCliente: '', direccionIP: '',
-  prioridadBaja: false, prioridadMedia: false, prioridadAlta: false, prioridadCritica: false,
-  tiempoEstimado: '', descripcionFalla: '',
-  tipoGarantia: false, tipoReparacion: false, tipoRevision: false, tipoDevolucion: false,
-  cajaOriginal: false, cablesConexion: false, baseMontaje: false,
-  bateria: false, fuentePoder: false, otroAccesorio: '',
-  estadoEnciende: false, estadoNoEnciende: false, estadoNoPosibleProbar: false,
-  huelaQuemado: false, estaGolpeado: false, estaQuebrado: false,
-  pantallaRota: false, estaRaspado: false, faltanTornillos: false,
-  indiciosHumedad: false, etiquetasDanadas: false, otroEstado: '',
-  nombreFirmaCliente: '',
-};
-this.posInstalacion = {
-  limpiezaAreas: false, revisionConexiones: false, cableadoOrganizado: false,
-  alimentacionVerificada: false, comunicacionVerificada: false,
-  internetVerificado: false, pruebasVenta: false, perifericosVerificados: false,
-  cantidadTerminalesPOS: 0, cantidadCajas: 0, cantidadPantallasCliente: 0,
-  cantidadImpresoras: 0, cantidadBasculas: 0, cantidadEtiquetadoras: 0,
-  cantidadChecadores: 0, cantidadKioskos: 0, cantidadTabletas: 0,
-  materialesAdicionales: '',
-  usuarioAdmin: '', contrasenaAdmin: '', contrasenaWindows: '',
-  datosLicencia: '', otrasCredenciales: '', firmaSupervisor: '',
-  sistemaOperativoVerificado: false, accesoUsuariosVerificado: false,
-  officeRemotoVerificado: false, sistemaFuncionaNormal: false,
-  perifericosFuncionan: false, impresionTicketsVerificada: false,
-  cajonDineroVerificado: false, basculaVerificada: false,
-  etiquetasVerificadas: false, checadorVerificado: false,
-  sincronizacionNube: false, respaldoAutomatico: false,
-  reportesAutomaticos: false, terminalesMoviles: false, fechaHoraVerificada: false,
-  internetBajada: '', internetSubida: '', correosReportes: '', recomendaciones: '',
-  capAltaProductos: false, capInventario: false, capVentaCobro: false,
-  capCortesCaja: false, capImpresionTickets: false, capBascula: false,
-  capEtiquetadora: false, capReportes: false, capUsuariosPermisos: false,
-  demostracionRealizada: false, pruebasVentaCliente: false,
-  canalizacionProfesional: false, accesoSistema: false,
-  capacitacionRecibida: false, personalProfesional: false,
-  sabesolicitarSoporte: false, entiendeLimitesGarantia: false, entiendeDanosExternos: false,
-  calificacion: 0, nps: '', solicitaSeguimiento: false, comentarios: '', nombreFirmaCliente: '',
-};
-this.canalizacion = {
-  limpiezaAreas: false, retiroResiduos: false, tuberiaFirme: false,
-  tuberiaCorrctamenteFijada: false, alineacionEstetica: false,
-  metrosTuberia: 0, cantidadRegistros: 0, cantidadCurvas: 0,
-  cantidadCajasCondulet: 0, cantidadAbrazaderas: 0, cantidadLicuatite: 0,
-  materialesAdicionales: '', detalleTrabajoRealizado: '', firmaTecnico: '',
-};
-this.cctvServicio = {
-  limpiezaAreas: false, revisionConexiones: false, grabadorLimpio: false,
-  cableadoIdentificado: false, alimentacionVerificada: false,
-  comunicacionVerificada: false, pruebasVisualizacion: false,
-  estadoSistemaDocumentado: false,
-  camarasConVideo: 0, camarasMantenimiento: 0, camarasReemplazadas: 0, camarasSinVideo: 0,
-  capacidadAlmacenamiento: '', materialesAdicionales: '', refaccionesUtilizadas: '',
-  nSerieGrabador: '', contrasenaGrabador: '', contrasenaHikConnect: '',
-  correoAsociado: '', otrosDatosCredenciales: '', firmaSupervisor: '',
-  detalleCliente: '', trabajosRealizados: '',
-  camarasVisualizando: false, grabacionConfigurada: false,
-  grabacionesVerificadas: false, reproduccionVerificada: false,
-  fechaHoraVerificada: false, discoVerificado: false,
-  videoMonitorCliente: false, accesoRemotoVerificado: false,
-  notificacionesVerificadas: false, microfonoLuzBlanca: false,
-  analiticosVerificados: false, upsVerificado: false, switchesPoEVerificados: false,
-  diagnosticoConfiguracion: false, diagnosticoFuentePoder: false,
-  diagnosticoCamara: false, diagnosticoCableado: false,
-  diagnosticoConectores: false, diagnosticoDiscoDuro: false,
-  diagnosticoRed: false, diagnosticoInternet: false,
-  diagnosticoElectrico: false, diagnosticoSinFalla: false, diagnosticoOtro: '',
-  internetBajada: '', internetSubida: '',
-  tiempoGrabacion: '', ubicacionGrabador: '', recomendaciones: '',
-  accionSustitucionCamaras: false, accionSustitucionDisco: false,
-  accionSustitucionUPS: false, accionSustitucionFuente: false,
-  accionMejoraAlmacenamiento: false, accionMantenimiento: false,
-  accionPolizaServicio: false, accionOtra: '',
-  demostracionRealizada: false, visualizacionGrabaciones: false,
-  explicacionFallas: false, canalizacionProfesional: false,
-  accesoHikConnect: false, explicacionCondiciones: false,
-  personalProfesional: false, sabesolicitarSoporte: false,
-  entiendeEquiposExistentes: false, entiendeLimitesGarantia: false,
-  calificacion: 0, nps: '', solicitaSeguimiento: false, comentarios: '', nombreFirmaCliente: '',
-};
+      ingeniero: '', cliente: '', marcaModelo: '', numeroSerie: '',
+      tipoGarantia: false, tipoReparacion: false, tipoRevision: false,
+      sinDanosVisibles: false, golpesDetectados: false, humedadDetectada: false,
+      sulfatacionDetectada: false, componentesFaltantes: false,
+      sellosGarantiaDanados: false, manipulacionPreviaDetectada: false,
+      otroEstadoFisico: '', observacionesEstado: '',
+      enciendeCorrectamente: false, noEnciende: false,
+      fuentePoderFuncional: false, fuentePoderDefectuosa: false,
+      comunicacionCorrecta: false, comunicacionIntermitente: false,
+      sinComunicacion: false, comunicacionNoAplica: false,
+      operaCorrectamente: false, fallaEnTodo: false, fallaIntermitente: false,
+      errorConfiguracion: false, firmwareDesactualizado: false,
+      firmwareCorrupto: false, danoFisicoInterno: false,
+      danoPorDescargaElectrica: false, danoPorHumedad: false, noSeDetectoFalla: false,
+      descripcionFalla: '',
+      fotografiasInternas: false, fotografiasComponentesDanados: false,
+      videoFuncionamiento: false, evidenciaWhatsapp: false,
+      accionReconfiguracion: false, accionActualizacionFirmware: false,
+      accionReparacionInterna: false, accionReemplazoComponente: false,
+      accionReemplazoTotal: false, accionEnvioGarantia: false,
+      accionSinReparacion: false, accionNoReparable: false,
+      noRequiereRefacciones: false, siRequiereRefacciones: false,
+      descripcionRefacciones: '', costoEstimado: 0, costoManoObra: 0,
+      resultadoReparado: false, resultadoPendienteGarantia: false,
+      resultadoPendienteRefacciones: false, resultadoEnviarProveedor: false,
+      resultadoGarantiaCobertura: false, resultadoGarantiaRechazada: false,
+      resultadoListoEntrega: false, resultadoNoReparable: false,
+      horasInvertidas: 0, dictamenTecnico: '', firmaTecnico: '', correoEnvioCotizacion: '',
+    };
+    this.reciboEquipo = {
+      colaborador: '', cliente: '', telefono: '', direccionEnvio: '',
+      correoElectronico: '', marcaModelo: '', sn: '', contraseniaCliente: '', direccionIP: '',
+      prioridadBaja: false, prioridadMedia: false, prioridadAlta: false, prioridadCritica: false,
+      tiempoEstimado: '', descripcionFalla: '',
+      tipoGarantia: false, tipoReparacion: false, tipoRevision: false, tipoDevolucion: false,
+      cajaOriginal: false, cablesConexion: false, baseMontaje: false,
+      bateria: false, fuentePoder: false, otroAccesorio: '',
+      estadoEnciende: false, estadoNoEnciende: false, estadoNoPosibleProbar: false,
+      huelaQuemado: false, estaGolpeado: false, estaQuebrado: false,
+      pantallaRota: false, estaRaspado: false, faltanTornillos: false,
+      indiciosHumedad: false, etiquetasDanadas: false, otroEstado: '',
+      nombreFirmaCliente: '',
+    };
+    this.posInstalacion = {
+      limpiezaAreas: false, revisionConexiones: false, cableadoOrganizado: false,
+      alimentacionVerificada: false, comunicacionVerificada: false,
+      internetVerificado: false, pruebasVenta: false, perifericosVerificados: false,
+      cantidadTerminalesPOS: 0, cantidadCajas: 0, cantidadPantallasCliente: 0,
+      cantidadImpresoras: 0, cantidadBasculas: 0, cantidadEtiquetadoras: 0,
+      cantidadChecadores: 0, cantidadKioskos: 0, cantidadTabletas: 0,
+      materialesAdicionales: '',
+      usuarioAdmin: '', contrasenaAdmin: '', contrasenaWindows: '',
+      datosLicencia: '', otrasCredenciales: '', firmaSupervisor: '',
+      sistemaOperativoVerificado: false, accesoUsuariosVerificado: false,
+      officeRemotoVerificado: false, sistemaFuncionaNormal: false,
+      perifericosFuncionan: false, impresionTicketsVerificada: false,
+      cajonDineroVerificado: false, basculaVerificada: false,
+      etiquetasVerificadas: false, checadorVerificado: false,
+      sincronizacionNube: false, respaldoAutomatico: false,
+      reportesAutomaticos: false, terminalesMoviles: false, fechaHoraVerificada: false,
+      internetBajada: '', internetSubida: '', correosReportes: '', recomendaciones: '',
+      capAltaProductos: false, capInventario: false, capVentaCobro: false,
+      capCortesCaja: false, capImpresionTickets: false, capBascula: false,
+      capEtiquetadora: false, capReportes: false, capUsuariosPermisos: false,
+      demostracionRealizada: false, pruebasVentaCliente: false,
+      canalizacionProfesional: false, accesoSistema: false,
+      capacitacionRecibida: false, personalProfesional: false,
+      sabesolicitarSoporte: false, entiendeLimitesGarantia: false, entiendeDanosExternos: false,
+      calificacion: 0, nps: '', solicitaSeguimiento: false, comentarios: '', nombreFirmaCliente: '',
+    };
+    this.canalizacion = {
+      limpiezaAreas: false, retiroResiduos: false, tuberiaFirme: false,
+      tuberiaCorrctamenteFijada: false, alineacionEstetica: false,
+      metrosTuberia: 0, cantidadRegistros: 0, cantidadCurvas: 0,
+      cantidadCajasCondulet: 0, cantidadAbrazaderas: 0, cantidadLicuatite: 0,
+      materialesAdicionales: '', detalleTrabajoRealizado: '', firmaTecnico: '',
+    };
+    this.cctvServicio = {
+      limpiezaAreas: false, revisionConexiones: false, grabadorLimpio: false,
+      cableadoIdentificado: false, alimentacionVerificada: false,
+      comunicacionVerificada: false, pruebasVisualizacion: false,
+      estadoSistemaDocumentado: false,
+      camarasConVideo: 0, camarasMantenimiento: 0, camarasReemplazadas: 0, camarasSinVideo: 0,
+      capacidadAlmacenamiento: '', materialesAdicionales: '', refaccionesUtilizadas: '',
+      nSerieGrabador: '', contrasenaGrabador: '', contrasenaHikConnect: '',
+      correoAsociado: '', otrosDatosCredenciales: '', firmaSupervisor: '',
+      detalleCliente: '', trabajosRealizados: '',
+      camarasVisualizando: false, grabacionConfigurada: false,
+      grabacionesVerificadas: false, reproduccionVerificada: false,
+      fechaHoraVerificada: false, discoVerificado: false,
+      videoMonitorCliente: false, accesoRemotoVerificado: false,
+      notificacionesVerificadas: false, microfonoLuzBlanca: false,
+      analiticosVerificados: false, upsVerificado: false, switchesPoEVerificados: false,
+      diagnosticoConfiguracion: false, diagnosticoFuentePoder: false,
+      diagnosticoCamara: false, diagnosticoCableado: false,
+      diagnosticoConectores: false, diagnosticoDiscoDuro: false,
+      diagnosticoRed: false, diagnosticoInternet: false,
+      diagnosticoElectrico: false, diagnosticoSinFalla: false, diagnosticoOtro: '',
+      internetBajada: '', internetSubida: '',
+      tiempoGrabacion: '', ubicacionGrabador: '', recomendaciones: '',
+      accionSustitucionCamaras: false, accionSustitucionDisco: false,
+      accionSustitucionUPS: false, accionSustitucionFuente: false,
+      accionMejoraAlmacenamiento: false, accionMantenimiento: false,
+      accionPolizaServicio: false, accionOtra: '',
+      demostracionRealizada: false, visualizacionGrabaciones: false,
+      explicacionFallas: false, canalizacionProfesional: false,
+      accesoHikConnect: false, explicacionCondiciones: false,
+      personalProfesional: false, sabesolicitarSoporte: false,
+      entiendeEquiposExistentes: false, entiendeLimitesGarantia: false,
+      calificacion: 0, nps: '', solicitaSeguimiento: false, comentarios: '', nombreFirmaCliente: '',
+    };
     this.firmaCanvas = null;
     this.firmaDataUrl = '';
     // NO limpiar firmasPorTipo
@@ -717,14 +720,16 @@ this.cctvServicio = {
       if (h.datosPosInstalacion) this.posInstalacion = { ...this.posInstalacion, ...h.datosPosInstalacion };
       if (h.datosCanalizacion) this.canalizacion = { ...this.canalizacion, ...h.datosCanalizacion };
       if (h.datosCctvServicio) this.cctvServicio = { ...this.cctvServicio, ...h.datosCctvServicio };
-      // Firma: prioridad memoria > Firestore
       if (!this.firmasPorTipo[tipo] && (h as any).firmaCliente) {
         this.firmasPorTipo[tipo] = (h as any).firmaCliente;
       }
     }
     this.firmaDataUrl = this.firmasPorTipo[tipo] || '';
-    // Resetear canvas para que iniciarFirma lo redibuje con la firma correcta
     this.firmaCanvas = null;
+    if (this.task?.cliente) {
+      if (!this.reciboEquipo.cliente) this.reciboEquipo.cliente = this.task.cliente;
+      if (!this.labDiagnostico.cliente) this.labDiagnostico.cliente = this.task.cliente;
+    }
   }
 
   iniciarFirma(canvas: HTMLCanvasElement) {
@@ -735,7 +740,6 @@ this.cctvServicio = {
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
 
-    // Limpiar y dibujar firma existente para este tipo
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const firmaExistente = this.tipoSeleccionado ? (this.firmasPorTipo[this.tipoSeleccionado] || '') : '';
     if (firmaExistente) {
@@ -832,6 +836,34 @@ this.cctvServicio = {
 
   async guardar() {
     if (!this.task?.id || !this.tipoSeleccionado || !this.currentUser) return;
+
+    let campoFaltante = '';
+    if (this.tipoSeleccionado === 'cctv_instalacion' || this.tipoSeleccionado === 'cctv_reparacion') {
+      if (!this.cctv.numeroCamaras) campoFaltante = 'Numero de camaras';
+    } else if (this.tipoSeleccionado === 'alarma_instalacion') {
+      if (!this.alarma.modeloPanel) campoFaltante = 'Modelo de panel';
+    } else if (this.tipoSeleccionado === 'soft_restaurant_instalacion') {
+      if (!this.softInstalacion.equipoImplementado) campoFaltante = 'Equipo implementado';
+    } else if (this.tipoSeleccionado === 'soft_restaurant_servicio') {
+      if (!this.softServicio.detalleEncontrado) campoFaltante = 'Detalle encontrado';
+    } else if (this.tipoSeleccionado === 'servicio_reparacion_general') {
+      if (!this.reparacionGeneral.detalleEncontrado) campoFaltante = 'Detalle encontrado';
+    } else if (this.tipoSeleccionado === 'lab_diagnostico') {
+      if (!this.labDiagnostico.marcaModelo) campoFaltante = 'Marca y modelo';
+    } else if (this.tipoSeleccionado === 'recibo_equipo') {
+      if (!this.reciboEquipo.cliente) campoFaltante = 'Cliente';
+      else if (!this.reciboEquipo.marcaModelo) campoFaltante = 'Marca y modelo';
+    } else if (this.tipoSeleccionado === 'canalizacion_conduit') {
+      if (!this.canalizacion.detalleTrabajoRealizado) campoFaltante = 'Detalle del trabajo realizado';
+    } else if (this.tipoSeleccionado === 'cctv_servicio') {
+      if (!this.cctvServicio.detalleCliente) campoFaltante = 'Detalle reportado por cliente';
+    }
+
+    if (campoFaltante) {
+      alert(`Campo obligatorio: "${campoFaltante}"`);
+      return;
+    }
+
     this.guardando = true;
 
     try {
@@ -880,7 +912,6 @@ this.cctvServicio = {
 
       await this.workOrderService.save(docId, data);
       this.hojasGuardadas = await this.workOrderService.getByTarea(this.task.id);
-      // Actualizar firmasPorTipo con lo que acabamos de guardar
       if (firmaActual) this.firmasPorTipo[this.tipoSeleccionado] = firmaActual;
       this.guardado = true;
       setTimeout(() => { this.guardado = false; this.cdr.detectChanges(); }, 2000);
@@ -929,13 +960,27 @@ this.cctvServicio = {
     if (!this.task || !this.tipoSeleccionado) return;
     this.generandoPDF = true;
 
-    // Capturar firma del canvas activo solo si tiene contenido real
+    // Capturar firma del canvas activo
     if (this.firmaCanvas && this.tipoSeleccionado) {
       const ctx = this.firmaCanvas.getContext('2d')!;
       const data = ctx.getImageData(0, 0, this.firmaCanvas.width, this.firmaCanvas.height).data;
       if (data.some(v => v !== 0)) {
         this.firmasPorTipo[this.tipoSeleccionado] = this.firmaCanvas.toDataURL();
       }
+    }
+
+    // Cargar logo via fetch
+    let logoBase64 = '';
+    try {
+      const response = await fetch('https://firebasestorage.googleapis.com/v0/b/sistemasintegra.firebasestorage.app/o/logo%20bien%20hecho-modified.png?alt=media&token=ce014cfa-5c0c-4533-ad07-dc6e3d0519bc');
+      const blob = await response.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.warn('No se pudo cargar el logo:', e);
     }
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -1000,20 +1045,43 @@ this.cctvServicio = {
 
     const addBanner = (tipoLabel: string) => {
       doc.setFillColor(30, 58, 110);
-      doc.rect(0, 0, pageWidth, 28, 'F');
-      doc.setFontSize(16);
+      doc.rect(0, 0, pageWidth, 30, 'F');
+
+      if (logoBase64) {
+        try {
+          doc.addImage(logoBase64, 'PNG', margin, 3, 24, 24);
+        } catch (e) { console.warn('Error insertando logo:', e); }
+      }
+
+      doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(255, 255, 255);
-      doc.text('Sistemas Integra', margin, 12);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Tecnologia  Seguridad  Control', margin + 25, 18);
+      doc.text('Sistemas Integra', margin + 28, 13);
+
       doc.setFontSize(8);
-      doc.text('contacto.emanuelflores@gmail.com', margin + 25, 23);
-      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(200, 220, 255);
+      doc.text('Tecnologia  |  Seguridad  |  Control', margin + 28, 20);
+
+      doc.setDrawColor(255, 255, 255);
+      doc.setLineWidth(0.3);
+      doc.line(pageWidth - 60, 5, pageWidth - 60, 25);
+
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
-      doc.text(`Hoja: ${tipoLabel}`, pageWidth - margin, 15, { align: 'right' });
-      y = 35;
+      doc.setTextColor(255, 255, 255);
+      doc.text('Hoja de trabajo:', pageWidth - 58, 11);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      const tipoLabelCorto = tipoLabel.length > 22 ? tipoLabel.substring(0, 22) + '...' : tipoLabel;
+      doc.text(tipoLabelCorto, pageWidth - 58, 17);
+
+      const folioCorto = this.task!.folioId.slice(-8).toUpperCase();
+      doc.setFontSize(7);
+      doc.setTextColor(200, 220, 255);
+      doc.text(`Folio: ${folioCorto}`, pageWidth - 58, 23);
+
+      y = 38;
     };
 
     const addDatosGenerales = () => {
@@ -1040,10 +1108,9 @@ this.cctvServicio = {
       }
     };
 
-  // Usar TODAS las hojas guardadas para el PDF
-const tiposAGenerar = this.hojasGuardadas.length > 0
-  ? this.hojasGuardadas.map(h => h.tipo)
-  : [this.tipoSeleccionado!];
+    const tiposAGenerar = this.hojasGuardadas.length > 0
+      ? this.hojasGuardadas.map(h => h.tipo)
+      : [this.tipoSeleccionado!];
 
     for (const tipo of tiposAGenerar) {
       if (!primeraHoja) { doc.addPage(); y = 15; }
@@ -1084,9 +1151,8 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
         addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos por descargas electricas o manipulacion indebida no aplican como garantia');
         addCheck(d.recomendoContrasenas, 'Se me recomendo actualizar mis contrasenas para mejorar privacidad y seguridad');
         addSpacer();
-        addField('Calificacion', `${d.calificacion}/10`);
-        addField('NPS', d.nps);
-        addField('Nombre del cliente', d.nombreFirmaCliente);
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
+        addField('Calificacion para referenciado', d.nps);
 
       } else if (tipo === 'alarma_instalacion') {
         const d = hojaData?.datosAlarma || this.alarma;
@@ -1131,9 +1197,8 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
         addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos por descargas electricas o manipulacion indebida no aplican como garantia');
         addCheck(d.recomendoContrasenas, 'Se me recomendo actualizar mis contrasenas y resguardar mis accesos');
         addSpacer();
-        addField('Calificacion', `${d.calificacion}/10`);
-        addField('NPS', d.nps);
-        addField('Nombre del cliente', d.nombreFirmaCliente);
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
+        addField('Calificacion para referenciado', d.nps);
 
       } else if (tipo === 'alarma_mercado_san_juan') {
         const d = hojaData?.datosAlarmaMarket || this.alarmaMarket;
@@ -1173,9 +1238,8 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
         addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos por descargas electricas o manipulacion indebida pueden violar la garantia');
         addCheck(d.recomendoContrasenas, 'Se me recomendo actualizar mis contrasenas y es mi responsabilidad resguardarlas');
         addSpacer();
-        addField('Calificacion', `${d.calificacion}/10`);
-        addField('NPS', d.nps);
-        addField('Nombre del cliente', d.nombreFirmaCliente);
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
+        addField('Calificacion para referenciado', d.nps);
 
       } else if (tipo === 'soft_restaurant_instalacion') {
         const d = hojaData?.datosSoftInstalacion || this.softInstalacion;
@@ -1226,282 +1290,278 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
         addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos por descargas electricas, agua o intervencion de terceros pueden violar la garantia');
         addCheck(d.contrasenaAdministradora, 'Se me informo que la contrasena administradora tiene el poder de hacer todo en el sistema');
         addSpacer();
-        addField('Calificacion', `${d.calificacion}/10`);
-        addField('NPS', d.nps);
-        addField('Nombre del cliente', d.nombreFirmaCliente);
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
+        addField('Calificacion para referenciado', d.nps);
 
-        } else if (tipo === 'lab_diagnostico') {
-  const d = hojaData?.datosLabDiagnostico || this.labDiagnostico;
-  addTitle('DATOS GENERALES');
-  addField('Ingeniero', d.ingeniero);
-  addField('Cliente', d.cliente);
-  addField('Marca y Modelo', d.marcaModelo);
-  addField('Numero de Serie', d.numeroSerie);
-  addField('Tipo de servicio',
-    [d.tipoGarantia && 'Garantia', d.tipoReparacion && 'Reparacion', d.tipoRevision && 'Revision']
-    .filter(Boolean).join(', '));
-  addSpacer();
-  addTitle('VALIDACION INICIAL');
-  addCheck(d.sinDanosVisibles, 'Sin danos visibles');
-  addCheck(d.golpesDetectados, 'Golpes detectados');
-  addCheck(d.humedadDetectada, 'Humedad detectada');
-  addCheck(d.sulfatacionDetectada, 'Sulfatacion detectada');
-  addCheck(d.componentesFaltantes, 'Componentes faltantes');
-  addCheck(d.sellosGarantiaDanados, 'Sellos de garantia danados');
-  addCheck(d.manipulacionPreviaDetectada, 'Manipulacion previa detectada');
-  addField('Observaciones', d.observacionesEstado);
-  addSpacer();
-  addTitle('PRUEBAS REALIZADAS');
-  addText('Energia', 9, true);
-  addCheck(d.enciendeCorrectamente, 'Enciende correctamente');
-  addCheck(d.noEnciende, 'No enciende');
-  addCheck(d.fuentePoderFuncional, 'Fuente de poder funcional');
-  addCheck(d.fuentePoderDefectuosa, 'Fuente de poder defectuosa');
-  addText('Comunicacion', 9, true);
-  addCheck(d.comunicacionCorrecta, 'Comunicacion correcta');
-  addCheck(d.comunicacionIntermitente, 'Comunicacion intermitente');
-  addCheck(d.sinComunicacion, 'Sin comunicacion');
-  addText('Operacion', 9, true);
-  addCheck(d.operaCorrectamente, 'Opera correctamente');
-  addCheck(d.fallaEnTodo, 'Falla en todo momento');
-  addCheck(d.fallaIntermitente, 'Falla intermitente');
-  addCheck(d.errorConfiguracion, 'Error de configuracion');
-  addCheck(d.danoFisicoInterno, 'Dano fisico interno');
-  addCheck(d.danoPorDescargaElectrica, 'Dano por descarga electrica');
-  addCheck(d.danoPorHumedad, 'Dano por humedad');
-  addCheck(d.noSeDetectoFalla, 'No se detecto falla');
-  addSpacer();
-  addTitle('DIAGNOSTICO TECNICO');
-  addField('Descripcion de la falla', d.descripcionFalla);
-  addSpacer();
-  addTitle('ACCION RECOMENDADA');
-  addCheck(d.accionReconfiguracion, 'Reconfiguracion');
-  addCheck(d.accionActualizacionFirmware, 'Actualizacion de firmware');
-  addCheck(d.accionReparacionInterna, 'Reparacion interna');
-  addCheck(d.accionReemplazoComponente, 'Reemplazo de componente');
-  addCheck(d.accionReemplazoTotal, 'Reemplazo total del equipo');
-  addCheck(d.accionEnvioGarantia, 'Envio a garantia fabricante');
-  addCheck(d.accionNoReparable, 'No reparable');
-  addSpacer();
-  addTitle('REFACCIONES Y COSTOS');
-  addCheck(d.noRequiereRefacciones, 'No requiere refacciones');
-  addCheck(d.siRequiereRefacciones, 'Si requiere refacciones');
-  addField('Descripcion', d.descripcionRefacciones);
-  addField('Costo estimado', `$${d.costoEstimado}`);
-  addField('Costo mano de obra', `$${d.costoManoObra}`);
-  addSpacer();
-  addTitle('RESULTADO FINAL');
-  addCheck(d.resultadoReparado, 'Reparado y probado');
-  addCheck(d.resultadoPendienteGarantia, 'Pendiente de validacion de garantia');
-  addCheck(d.resultadoPendienteRefacciones, 'Pendiente de refacciones');
-  addCheck(d.resultadoListoEntrega, 'Equipo listo para entrega');
-  addCheck(d.resultadoNoReparable, 'Equipo no reparable');
-  addField('Horas invertidas', String(d.horasInvertidas));
-  addField('Dictamen tecnico', d.dictamenTecnico);
-  addField('Tecnico responsable', d.firmaTecnico);
+      } else if (tipo === 'lab_diagnostico') {
+        const d = hojaData?.datosLabDiagnostico || this.labDiagnostico;
+        addTitle('DATOS GENERALES');
+        addField('Ingeniero', d.ingeniero);
+        addField('Cliente', d.cliente);
+        addField('Marca y Modelo', d.marcaModelo);
+        addField('Numero de Serie', d.numeroSerie);
+        addField('Tipo de servicio',
+          [d.tipoGarantia && 'Garantia', d.tipoReparacion && 'Reparacion', d.tipoRevision && 'Revision']
+          .filter(Boolean).join(', '));
+        addSpacer();
+        addTitle('VALIDACION INICIAL');
+        addCheck(d.sinDanosVisibles, 'Sin danos visibles');
+        addCheck(d.golpesDetectados, 'Golpes detectados');
+        addCheck(d.humedadDetectada, 'Humedad detectada');
+        addCheck(d.sulfatacionDetectada, 'Sulfatacion detectada');
+        addCheck(d.componentesFaltantes, 'Componentes faltantes');
+        addCheck(d.sellosGarantiaDanados, 'Sellos de garantia danados');
+        addCheck(d.manipulacionPreviaDetectada, 'Manipulacion previa detectada');
+        addField('Observaciones', d.observacionesEstado);
+        addSpacer();
+        addTitle('PRUEBAS REALIZADAS');
+        addText('Energia', 9, true);
+        addCheck(d.enciendeCorrectamente, 'Enciende correctamente');
+        addCheck(d.noEnciende, 'No enciende');
+        addCheck(d.fuentePoderFuncional, 'Fuente de poder funcional');
+        addCheck(d.fuentePoderDefectuosa, 'Fuente de poder defectuosa');
+        addText('Comunicacion', 9, true);
+        addCheck(d.comunicacionCorrecta, 'Comunicacion correcta');
+        addCheck(d.comunicacionIntermitente, 'Comunicacion intermitente');
+        addCheck(d.sinComunicacion, 'Sin comunicacion');
+        addText('Operacion', 9, true);
+        addCheck(d.operaCorrectamente, 'Opera correctamente');
+        addCheck(d.fallaEnTodo, 'Falla en todo momento');
+        addCheck(d.fallaIntermitente, 'Falla intermitente');
+        addCheck(d.errorConfiguracion, 'Error de configuracion');
+        addCheck(d.danoFisicoInterno, 'Dano fisico interno');
+        addCheck(d.danoPorDescargaElectrica, 'Dano por descarga electrica');
+        addCheck(d.danoPorHumedad, 'Dano por humedad');
+        addCheck(d.noSeDetectoFalla, 'No se detecto falla');
+        addSpacer();
+        addTitle('DIAGNOSTICO TECNICO');
+        addField('Descripcion de la falla', d.descripcionFalla);
+        addSpacer();
+        addTitle('ACCION RECOMENDADA');
+        addCheck(d.accionReconfiguracion, 'Reconfiguracion');
+        addCheck(d.accionActualizacionFirmware, 'Actualizacion de firmware');
+        addCheck(d.accionReparacionInterna, 'Reparacion interna');
+        addCheck(d.accionReemplazoComponente, 'Reemplazo de componente');
+        addCheck(d.accionReemplazoTotal, 'Reemplazo total del equipo');
+        addCheck(d.accionEnvioGarantia, 'Envio a garantia fabricante');
+        addCheck(d.accionNoReparable, 'No reparable');
+        addSpacer();
+        addTitle('REFACCIONES Y COSTOS');
+        addCheck(d.noRequiereRefacciones, 'No requiere refacciones');
+        addCheck(d.siRequiereRefacciones, 'Si requiere refacciones');
+        addField('Descripcion', d.descripcionRefacciones);
+        addField('Costo estimado', `$${d.costoEstimado}`);
+        addField('Costo mano de obra', `$${d.costoManoObra}`);
+        addSpacer();
+        addTitle('RESULTADO FINAL');
+        addCheck(d.resultadoReparado, 'Reparado y probado');
+        addCheck(d.resultadoPendienteGarantia, 'Pendiente de validacion de garantia');
+        addCheck(d.resultadoPendienteRefacciones, 'Pendiente de refacciones');
+        addCheck(d.resultadoListoEntrega, 'Equipo listo para entrega');
+        addCheck(d.resultadoNoReparable, 'Equipo no reparable');
+        addField('Horas invertidas', String(d.horasInvertidas));
+        addField('Dictamen tecnico', d.dictamenTecnico);
+        addField('Tecnico responsable', d.firmaTecnico);
 
-} else if (tipo === 'recibo_equipo') {
-  const d = hojaData?.datosReciboEquipo || this.reciboEquipo;
-  addTitle('DATOS GENERALES');
-  addField('Colaborador', d.colaborador);
-  addField('Cliente', d.cliente);
-  addField('Telefono', d.telefono);
-  addField('Correo electronico', d.correoElectronico);
-  addField('Marca y Modelo', d.marcaModelo);
-  addField('SN', d.sn);
-  addField('Contrasenia cliente', d.contraseniaCliente);
-  addField('Direccion IP', d.direccionIP);
-  addField('Prioridad',
-    [d.prioridadBaja && 'Baja', d.prioridadMedia && 'Media',
-     d.prioridadAlta && 'Alta', d.prioridadCritica && 'Critica']
-    .filter(Boolean).join(', '));
-  addField('Tiempo estimado', d.tiempoEstimado);
-  addSpacer();
-  addTitle('DETALLES DE RECIBO');
-  addField('Descripcion de la falla', d.descripcionFalla);
-  addField('Tipo',
-    [d.tipoGarantia && 'Garantia', d.tipoReparacion && 'Reparacion',
-     d.tipoRevision && 'Revision', d.tipoDevolucion && 'Devolucion']
-    .filter(Boolean).join(', '));
-  addSpacer();
-  addTitle('ACCESORIOS RECIBIDOS');
-  addCheck(d.cajaOriginal, 'Caja original');
-  addCheck(d.cablesConexion, 'Cables de conexion');
-  addCheck(d.baseMontaje, 'Base de montaje');
-  addCheck(d.bateria, 'Bateria');
-  addCheck(d.fuentePoder, 'Fuente de poder');
-  addSpacer();
-  addTitle('ESTADO AL RECIBIR');
-  addCheck(d.estadoEnciende, 'Enciende');
-  addCheck(d.estadoNoEnciende, 'No enciende');
-  addCheck(d.estadoNoPosibleProbar, 'No fue posible probar');
-  addSpacer();
-  addTitle('ESTADO VISIBLE DEL EQUIPO');
-  addCheck(d.huelaQuemado, 'Huele a quemado');
-  addCheck(d.estaGolpeado, 'Esta golpeado');
-  addCheck(d.estaQuebrado, 'Esta quebrado');
-  addCheck(d.pantallaRota, 'Pantalla rota');
-  addCheck(d.faltanTornillos, 'Le faltan tornillos');
-  addCheck(d.indiciosHumedad, 'Tiene indicios de humedad');
-  addCheck(d.etiquetasDanadas, 'Etiquetas de garantia danadas');
-  addField('Nombre de quien recibe', d.nombreFirmaCliente);
+      } else if (tipo === 'recibo_equipo') {
+        const d = hojaData?.datosReciboEquipo || this.reciboEquipo;
+        addTitle('DATOS GENERALES');
+        addField('Colaborador', d.colaborador);
+        addField('Cliente', d.cliente);
+        addField('Telefono', d.telefono);
+        addField('Correo electronico', d.correoElectronico);
+        addField('Marca y Modelo', d.marcaModelo);
+        addField('SN', d.sn);
+        addField('Contrasenia cliente', d.contraseniaCliente);
+        addField('Direccion IP', d.direccionIP);
+        addField('Prioridad',
+          [d.prioridadBaja && 'Baja', d.prioridadMedia && 'Media',
+           d.prioridadAlta && 'Alta', d.prioridadCritica && 'Critica']
+          .filter(Boolean).join(', '));
+        addField('Tiempo estimado', d.tiempoEstimado);
+        addSpacer();
+        addTitle('DETALLES DE RECIBO');
+        addField('Descripcion de la falla', d.descripcionFalla);
+        addField('Tipo',
+          [d.tipoGarantia && 'Garantia', d.tipoReparacion && 'Reparacion',
+           d.tipoRevision && 'Revision', d.tipoDevolucion && 'Devolucion']
+          .filter(Boolean).join(', '));
+        addSpacer();
+        addTitle('ACCESORIOS RECIBIDOS');
+        addCheck(d.cajaOriginal, 'Caja original');
+        addCheck(d.cablesConexion, 'Cables de conexion');
+        addCheck(d.baseMontaje, 'Base de montaje');
+        addCheck(d.bateria, 'Bateria');
+        addCheck(d.fuentePoder, 'Fuente de poder');
+        addSpacer();
+        addTitle('ESTADO AL RECIBIR');
+        addCheck(d.estadoEnciende, 'Enciende');
+        addCheck(d.estadoNoEnciende, 'No enciende');
+        addCheck(d.estadoNoPosibleProbar, 'No fue posible probar');
+        addSpacer();
+        addTitle('ESTADO VISIBLE DEL EQUIPO');
+        addCheck(d.huelaQuemado, 'Huele a quemado');
+        addCheck(d.estaGolpeado, 'Esta golpeado');
+        addCheck(d.estaQuebrado, 'Esta quebrado');
+        addCheck(d.pantallaRota, 'Pantalla rota');
+        addCheck(d.faltanTornillos, 'Le faltan tornillos');
+        addCheck(d.indiciosHumedad, 'Tiene indicios de humedad');
+        addCheck(d.etiquetasDanadas, 'Etiquetas de garantia danadas');
+        addField('Nombre de quien recibe', d.nombreFirmaCliente);
 
-} else if (tipo === 'pos_perifericos_instalacion') {
-  const d = hojaData?.datosPosInstalacion || this.posInstalacion;
-  addTitle('VALIDACION DE SERVICIO INTERNO');
-  addCheck(d.limpiezaAreas, 'Limpieza de areas en donde se trabajo');
-  addCheck(d.revisionConexiones, 'Revision y correccion de conexiones');
-  addCheck(d.cableadoOrganizado, 'Todo el cableado quedo organizado y asegurado');
-  addCheck(d.alimentacionVerificada, 'Se verifico alimentacion regulada de todos los equipos');
-  addCheck(d.comunicacionVerificada, 'Se verifico comunicacion entre todos los dispositivos');
-  addCheck(d.internetVerificado, 'Se verifico acceso a internet y red local');
-  addCheck(d.pruebasVenta, 'Se realizaron pruebas completas de venta, cobro e impresion');
-  addCheck(d.perifericosVerificados, 'Se verifico correcta operacion de todos los perifericos');
-  addSpacer();
-  addTitle('EQUIPOS INSTALADOS');
-  addField('Terminales POS', String(d.cantidadTerminalesPOS));
-  addField('Cajas', String(d.cantidadCajas));
-  addField('Pantallas cliente', String(d.cantidadPantallasCliente));
-  addField('Impresoras', String(d.cantidadImpresoras));
-  addField('Basculas', String(d.cantidadBasculas));
-  addField('Tabletas', String(d.cantidadTabletas));
-  addField('Materiales adicionales', d.materialesAdicionales);
-  addSpacer();
-  addTitle('CREDENCIALES DE ACCESO');
-  addField('Usuario Admin', d.usuarioAdmin);
-  addField('Contrasena Admin', d.contrasenaAdmin);
-  addField('Contrasena Windows', d.contrasenaWindows);
-  addField('Datos de licencia', d.datosLicencia);
-  addField('Otras credenciales', d.otrasCredenciales);
-  addField('Validacion supervisor', d.firmaSupervisor);
-  addSpacer();
-  addTitle('VALIDACIONES TECNICAS');
-  addCheck(d.sistemaOperativoVerificado, 'Se verifico inicio correcto del sistema operativo');
-  addCheck(d.accesoUsuariosVerificado, 'Se verifico acceso de usuarios al sistema');
-  addCheck(d.sistemaFuncionaNormal, 'Se verifico que el sistema funcionara con normalidad');
-  addCheck(d.perifericosFuncionan, 'Se verifico funcionamiento de perifericos');
-  addCheck(d.impresionTicketsVerificada, 'Se verifico impresion de tickets correctamente');
-  addCheck(d.cajonDineroVerificado, 'Se verifico apertura automatica del cajon de dinero');
-  addCheck(d.fechaHoraVerificada, 'Fecha y hora verificadas correctamente');
-  addField('Internet Bajada', `${d.internetBajada} Mbps`);
-  addField('Internet Subida', `${d.internetSubida} Mbps`);
-  addField('Correos para reportes', d.correosReportes);
-  addField('Recomendaciones', d.recomendaciones);
-  addSpacer();
-  addTitle('CAPACITACION REALIZADA');
-  addCheck(d.capAltaProductos, 'Alta de productos / servicios / socios');
-  addCheck(d.capVentaCobro, 'Venta y cobro, devoluciones');
-  addCheck(d.capCortesCaja, 'Cortes de caja');
-  addCheck(d.capImpresionTickets, 'Impresion de tickets');
-  addCheck(d.capReportes, 'Consulta de reportes');
-  addCheck(d.capUsuariosPermisos, 'Alta de usuarios y gestion de permisos');
-  addSpacer();
-  addTitle('ENTREGA AL CLIENTE');
-  addCheck(d.demostracionRealizada, 'Me mostraron el funcionamiento completo del sistema instalado');
-  addCheck(d.pruebasVentaCliente, 'Realizaron pruebas de venta, cobro e impresion frente a mi');
-  addCheck(d.canalizacionProfesional, 'El cableado, montaje y limpieza me parecieron ordenados y profesionales');
-  addCheck(d.accesoSistema, 'Tengo acceso al sistema y puedo utilizarlo correctamente');
-  addCheck(d.capacitacionRecibida, 'Recibi capacitacion basica de operacion');
-  addCheck(d.personalProfesional, 'El personal se presento de manera profesional');
-  addCheck(d.sabesolicitarSoporte, 'Se como solicitar soporte tecnico en caso de requerir asistencia futura');
-  addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos externos pueden afectar la garantia del sistema');
-  addSpacer();
-  addField('Calificacion', `${d.calificacion}/10`);
-  addField('NPS', d.nps);
-  addField('Nombre del cliente', d.nombreFirmaCliente);
+      } else if (tipo === 'pos_perifericos_instalacion') {
+        const d = hojaData?.datosPosInstalacion || this.posInstalacion;
+        addTitle('VALIDACION DE SERVICIO INTERNO');
+        addCheck(d.limpiezaAreas, 'Limpieza de areas en donde se trabajo');
+        addCheck(d.revisionConexiones, 'Revision y correccion de conexiones');
+        addCheck(d.cableadoOrganizado, 'Todo el cableado quedo organizado y asegurado');
+        addCheck(d.alimentacionVerificada, 'Se verifico alimentacion regulada de todos los equipos');
+        addCheck(d.comunicacionVerificada, 'Se verifico comunicacion entre todos los dispositivos');
+        addCheck(d.internetVerificado, 'Se verifico acceso a internet y red local');
+        addCheck(d.pruebasVenta, 'Se realizaron pruebas completas de venta, cobro e impresion');
+        addCheck(d.perifericosVerificados, 'Se verifico correcta operacion de todos los perifericos');
+        addSpacer();
+        addTitle('EQUIPOS INSTALADOS');
+        addField('Terminales POS', String(d.cantidadTerminalesPOS));
+        addField('Cajas', String(d.cantidadCajas));
+        addField('Pantallas cliente', String(d.cantidadPantallasCliente));
+        addField('Impresoras', String(d.cantidadImpresoras));
+        addField('Basculas', String(d.cantidadBasculas));
+        addField('Tabletas', String(d.cantidadTabletas));
+        addField('Materiales adicionales', d.materialesAdicionales);
+        addSpacer();
+        addTitle('CREDENCIALES DE ACCESO');
+        addField('Usuario Admin', d.usuarioAdmin);
+        addField('Contrasena Admin', d.contrasenaAdmin);
+        addField('Contrasena Windows', d.contrasenaWindows);
+        addField('Datos de licencia', d.datosLicencia);
+        addField('Otras credenciales', d.otrasCredenciales);
+        addField('Validacion supervisor', d.firmaSupervisor);
+        addSpacer();
+        addTitle('VALIDACIONES TECNICAS');
+        addCheck(d.sistemaOperativoVerificado, 'Se verifico inicio correcto del sistema operativo');
+        addCheck(d.accesoUsuariosVerificado, 'Se verifico acceso de usuarios al sistema');
+        addCheck(d.sistemaFuncionaNormal, 'Se verifico que el sistema funcionara con normalidad');
+        addCheck(d.perifericosFuncionan, 'Se verifico funcionamiento de perifericos');
+        addCheck(d.impresionTicketsVerificada, 'Se verifico impresion de tickets correctamente');
+        addCheck(d.cajonDineroVerificado, 'Se verifico apertura automatica del cajon de dinero');
+        addCheck(d.fechaHoraVerificada, 'Fecha y hora verificadas correctamente');
+        addField('Internet Bajada', `${d.internetBajada} Mbps`);
+        addField('Internet Subida', `${d.internetSubida} Mbps`);
+        addField('Correos para reportes', d.correosReportes);
+        addField('Recomendaciones', d.recomendaciones);
+        addSpacer();
+        addTitle('CAPACITACION REALIZADA');
+        addCheck(d.capAltaProductos, 'Alta de productos / servicios / socios');
+        addCheck(d.capVentaCobro, 'Venta y cobro, devoluciones');
+        addCheck(d.capCortesCaja, 'Cortes de caja');
+        addCheck(d.capImpresionTickets, 'Impresion de tickets');
+        addCheck(d.capReportes, 'Consulta de reportes');
+        addCheck(d.capUsuariosPermisos, 'Alta de usuarios y gestion de permisos');
+        addSpacer();
+        addTitle('ENTREGA AL CLIENTE');
+        addCheck(d.demostracionRealizada, 'Me mostraron el funcionamiento completo del sistema instalado');
+        addCheck(d.pruebasVentaCliente, 'Realizaron pruebas de venta, cobro e impresion frente a mi');
+        addCheck(d.canalizacionProfesional, 'El cableado, montaje y limpieza me parecieron ordenados y profesionales');
+        addCheck(d.accesoSistema, 'Tengo acceso al sistema y puedo utilizarlo correctamente');
+        addCheck(d.capacitacionRecibida, 'Recibi capacitacion basica de operacion');
+        addCheck(d.personalProfesional, 'El personal se presento de manera profesional');
+        addCheck(d.sabesolicitarSoporte, 'Se como solicitar soporte tecnico en caso de requerir asistencia futura');
+        addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos externos pueden afectar la garantia del sistema');
+        addSpacer();
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
+        addField('Calificacion para referenciado', d.nps);
 
-} else if (tipo === 'canalizacion_conduit') {
-  const d = hojaData?.datosCanalizacion || this.canalizacion;
-  addTitle('VALIDACION DE SERVICIO INTERNO');
-  addCheck(d.limpiezaAreas, 'Limpieza de areas en donde se trabajo');
-  addCheck(d.retiroResiduos, 'Se retiraron residuos de tuberia');
-  addCheck(d.tuberiaFirme, 'Se verifico que no se sienta la tuberia suelta');
-  addCheck(d.tuberiaCorrctamenteFijada, 'Todos los tramos de tuberia quedaron correctamente fijados');
-  addCheck(d.alineacionEstetica, 'Se verifico alineacion y estetica general de la instalacion');
-  addSpacer();
-  addTitle('MATERIALES INSTALADOS');
-  addField('Metros de tuberia conduit', String(d.metrosTuberia));
-  addField('Registros tipo L,T,paso', String(d.cantidadRegistros));
-  addField('Curvas instaladas', String(d.cantidadCurvas));
-  addField('Cajas condulet/registro', String(d.cantidadCajasCondulet));
-  addField('Abrazaderas/soportes', String(d.cantidadAbrazaderas));
-  addField('Licuatite', String(d.cantidadLicuatite));
-  addField('Materiales adicionales', d.materialesAdicionales);
-  addSpacer();
-  addTitle('DETALLE DEL TRABAJO REALIZADO');
-  addField('Descripcion', d.detalleTrabajoRealizado);
-  addField('Tecnico responsable', d.firmaTecnico);
+      } else if (tipo === 'canalizacion_conduit') {
+        const d = hojaData?.datosCanalizacion || this.canalizacion;
+        addTitle('VALIDACION DE SERVICIO INTERNO');
+        addCheck(d.limpiezaAreas, 'Limpieza de areas en donde se trabajo');
+        addCheck(d.retiroResiduos, 'Se retiraron residuos de tuberia');
+        addCheck(d.tuberiaFirme, 'Se verifico que no se sienta la tuberia suelta');
+        addCheck(d.tuberiaCorrctamenteFijada, 'Todos los tramos de tuberia quedaron correctamente fijados');
+        addCheck(d.alineacionEstetica, 'Se verifico alineacion y estetica general de la instalacion');
+        addSpacer();
+        addTitle('MATERIALES INSTALADOS');
+        addField('Metros de tuberia conduit', String(d.metrosTuberia));
+        addField('Registros tipo L,T,paso', String(d.cantidadRegistros));
+        addField('Curvas instaladas', String(d.cantidadCurvas));
+        addField('Cajas condulet/registro', String(d.cantidadCajasCondulet));
+        addField('Abrazaderas/soportes', String(d.cantidadAbrazaderas));
+        addField('Licuatite', String(d.cantidadLicuatite));
+        addField('Materiales adicionales', d.materialesAdicionales);
+        addSpacer();
+        addTitle('DETALLE DEL TRABAJO REALIZADO');
+        addField('Descripcion', d.detalleTrabajoRealizado);
+        addField('Tecnico responsable', d.firmaTecnico);
 
-} else if (tipo === 'cctv_servicio') {
-  const d = hojaData?.datosCctvServicio || this.cctvServicio;
-  addTitle('VALIDACION DE SERVICIO INTERNO');
-  addCheck(d.limpiezaAreas, 'Limpieza de areas en donde se trabajo');
-  addCheck(d.revisionConexiones, 'Se revisaron y corrigieron conexiones problematicas');
-  addCheck(d.grabadorLimpio, 'El grabador quedo limpio, organizado y correctamente cerrado');
-  addCheck(d.cableadoIdentificado, 'El cableado quedo correctamente identificado y peinado');
-  addCheck(d.alimentacionVerificada, 'Se verifico alimentacion electrica del grabador');
-  addCheck(d.comunicacionVerificada, 'Se verifico comunicacion correcta entre camaras y grabador');
-  addCheck(d.pruebasVisualizacion, 'Se realizaron pruebas de visualizacion y grabacion');
-  addSpacer();
-  addTitle('EQUIPOS');
-  addField('Camaras con video', String(d.camarasConVideo));
-  addField('Camaras con mantenimiento', String(d.camarasMantenimiento));
-  addField('Camaras reemplazadas', String(d.camarasReemplazadas));
-  addField('Camaras sin video', String(d.camarasSinVideo));
-  addField('Capacidad almacenamiento', d.capacidadAlmacenamiento);
-  addField('Materiales adicionales', d.materialesAdicionales);
-  addField('Refacciones utilizadas', d.refaccionesUtilizadas);
-  addSpacer();
-  addTitle('CREDENCIALES');
-  addField('N° Serie Grabador', d.nSerieGrabador);
-  addField('Contrasena Grabador', d.contrasenaGrabador);
-  addField('Contrasena Hik-Connect', d.contrasenaHikConnect);
-  addField('Correo/Telefono asociado', d.correoAsociado);
-  addField('Validacion supervisor', d.firmaSupervisor);
-  addSpacer();
-  addTitle('DETALLE DEL SERVICIO');
-  addField('Detalle reportado por cliente', d.detalleCliente);
-  addField('Trabajos realizados', d.trabajosRealizados);
-  addSpacer();
-  addTitle('VALIDACIONES TECNICAS');
-  addCheck(d.camarasVisualizando, 'Se verifico visualizacion de todas las camaras funcionando');
-  addCheck(d.grabacionConfigurada, 'Se verifico configuracion de grabacion correctamente');
-  addCheck(d.grabacionesVerificadas, 'Se verificaron grabaciones en camaras operativas');
-  addCheck(d.reproduccionVerificada, 'Se verifico reproduccion de grabaciones');
-  addCheck(d.fechaHoraVerificada, 'Se verifico fecha y hora del sistema');
-  addCheck(d.discoVerificado, 'Se verifico funcionamiento correcto del disco duro');
-  addCheck(d.videoMonitorCliente, 'Se verifico video en monitor de cliente');
-  addCheck(d.accesoRemotoVerificado, 'Se verifico acceso remoto mediante Hik-Connect');
-  addSpacer();
-  addTitle('DIAGNOSTICO REALIZADO');
-  addCheck(d.diagnosticoConfiguracion, 'Configuracion incorrecta');
-  addCheck(d.diagnosticoFuentePoder, 'Dano en fuente de poder');
-  addCheck(d.diagnosticoCamara, 'Dano en camara');
-  addCheck(d.diagnosticoCableado, 'Dano en cableado');
-  addCheck(d.diagnosticoDiscoDuro, 'Dano en disco duro');
-  addCheck(d.diagnosticoRed, 'Problema de red');
-  addCheck(d.diagnosticoInternet, 'Problema de internet');
-  addCheck(d.diagnosticoSinFalla, 'No se detecto falla');
-  addField('Internet Bajada', `${d.internetBajada} Mbps`);
-  addField('Internet Subida', `${d.internetSubida} Mbps`);
-  addField('Tiempo estimado grabacion', d.tiempoGrabacion);
-  addField('Ubicacion grabador', d.ubicacionGrabador);
-  addField('Recomendaciones', d.recomendaciones);
-  addSpacer();
-  addTitle('ENTREGA AL CLIENTE');
-  addCheck(d.demostracionRealizada, 'Me mostraron el funcionamiento del sistema despues del servicio');
-  addCheck(d.visualizacionGrabaciones, 'Me mostraron visualizacion en vivo y grabaciones almacenadas');
-  addCheck(d.explicacionFallas, 'Me explicaron las fallas encontradas y acciones correctivas');
-  addCheck(d.canalizacionProfesional, 'La canalizacion, cableado y limpieza me parecieron profesionales');
-  addCheck(d.accesoHikConnect, 'Tengo acceso al sistema mediante Hik-Connect y/o monitor local');
-  addCheck(d.personalProfesional, 'El personal se presento de manera profesional');
-  addCheck(d.sabesolicitarSoporte, 'Se como solicitar soporte tecnico en caso de requerir asistencia futura');
-  addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos externos pueden afectar el funcionamiento del sistema');
-  addSpacer();
-  addField('Calificacion', `${d.calificacion}/10`);
-  addField('NPS', d.nps);
-  addField('Nombre del cliente', d.nombreFirmaCliente);
-
+      } else if (tipo === 'cctv_servicio') {
+        const d = hojaData?.datosCctvServicio || this.cctvServicio;
+        addTitle('VALIDACION DE SERVICIO INTERNO');
+        addCheck(d.limpiezaAreas, 'Limpieza de areas en donde se trabajo');
+        addCheck(d.revisionConexiones, 'Se revisaron y corrigieron conexiones problematicas');
+        addCheck(d.grabadorLimpio, 'El grabador quedo limpio, organizado y correctamente cerrado');
+        addCheck(d.cableadoIdentificado, 'El cableado quedo correctamente identificado y peinado');
+        addCheck(d.alimentacionVerificada, 'Se verifico alimentacion electrica del grabador');
+        addCheck(d.comunicacionVerificada, 'Se verifico comunicacion correcta entre camaras y grabador');
+        addCheck(d.pruebasVisualizacion, 'Se realizaron pruebas de visualizacion y grabacion');
+        addSpacer();
+        addTitle('EQUIPOS');
+        addField('Camaras con video', String(d.camarasConVideo));
+        addField('Camaras con mantenimiento', String(d.camarasMantenimiento));
+        addField('Camaras reemplazadas', String(d.camarasReemplazadas));
+        addField('Camaras sin video', String(d.camarasSinVideo));
+        addField('Capacidad almacenamiento', d.capacidadAlmacenamiento);
+        addField('Materiales adicionales', d.materialesAdicionales);
+        addField('Refacciones utilizadas', d.refaccionesUtilizadas);
+        addSpacer();
+        addTitle('CREDENCIALES');
+        addField('N° Serie Grabador', d.nSerieGrabador);
+        addField('Contrasena Grabador', d.contrasenaGrabador);
+        addField('Contrasena Hik-Connect', d.contrasenaHikConnect);
+        addField('Correo/Telefono asociado', d.correoAsociado);
+        addField('Validacion supervisor', d.firmaSupervisor);
+        addSpacer();
+        addTitle('DETALLE DEL SERVICIO');
+        addField('Detalle reportado por cliente', d.detalleCliente);
+        addField('Trabajos realizados', d.trabajosRealizados);
+        addSpacer();
+        addTitle('VALIDACIONES TECNICAS');
+        addCheck(d.camarasVisualizando, 'Se verifico visualizacion de todas las camaras funcionando');
+        addCheck(d.grabacionConfigurada, 'Se verifico configuracion de grabacion correctamente');
+        addCheck(d.grabacionesVerificadas, 'Se verificaron grabaciones en camaras operativas');
+        addCheck(d.reproduccionVerificada, 'Se verifico reproduccion de grabaciones');
+        addCheck(d.fechaHoraVerificada, 'Se verifico fecha y hora del sistema');
+        addCheck(d.discoVerificado, 'Se verifico funcionamiento correcto del disco duro');
+        addCheck(d.videoMonitorCliente, 'Se verifico video en monitor de cliente');
+        addCheck(d.accesoRemotoVerificado, 'Se verifico acceso remoto mediante Hik-Connect');
+        addSpacer();
+        addTitle('DIAGNOSTICO REALIZADO');
+        addCheck(d.diagnosticoConfiguracion, 'Configuracion incorrecta');
+        addCheck(d.diagnosticoFuentePoder, 'Dano en fuente de poder');
+        addCheck(d.diagnosticoCamara, 'Dano en camara');
+        addCheck(d.diagnosticoCableado, 'Dano en cableado');
+        addCheck(d.diagnosticoDiscoDuro, 'Dano en disco duro');
+        addCheck(d.diagnosticoRed, 'Problema de red');
+        addCheck(d.diagnosticoInternet, 'Problema de internet');
+        addCheck(d.diagnosticoSinFalla, 'No se detecto falla');
+        addField('Internet Bajada', `${d.internetBajada} Mbps`);
+        addField('Internet Subida', `${d.internetSubida} Mbps`);
+        addField('Tiempo estimado grabacion', d.tiempoGrabacion);
+        addField('Ubicacion grabador', d.ubicacionGrabador);
+        addField('Recomendaciones', d.recomendaciones);
+        addSpacer();
+        addTitle('ENTREGA AL CLIENTE');
+        addCheck(d.demostracionRealizada, 'Me mostraron el funcionamiento del sistema despues del servicio');
+        addCheck(d.visualizacionGrabaciones, 'Me mostraron visualizacion en vivo y grabaciones almacenadas');
+        addCheck(d.explicacionFallas, 'Me explicaron las fallas encontradas y acciones correctivas');
+        addCheck(d.canalizacionProfesional, 'La canalizacion, cableado y limpieza me parecieron profesionales');
+        addCheck(d.accesoHikConnect, 'Tengo acceso al sistema mediante Hik-Connect y/o monitor local');
+        addCheck(d.personalProfesional, 'El personal se presento de manera profesional');
+        addCheck(d.sabesolicitarSoporte, 'Se como solicitar soporte tecnico en caso de requerir asistencia futura');
+        addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos externos pueden afectar el funcionamiento del sistema');
+        addSpacer();
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
+        addField('Calificacion para referenciado', d.nps);
 
       } else if (tipo === 'soft_restaurant_servicio') {
         const d = hojaData?.datosSoftServicio || this.softServicio;
@@ -1519,7 +1579,7 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
         addCheck(d.sistemaListoEntrega, 'Sistema listo para entrega, opera con normalidad');
         addField('Colaborador responsable', d.nombreColaborador);
         addSpacer();
-        addField('Calificacion', `${d.calificacion}/10`);
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
         addField('Nombre de quien recibe', d.nombreFirmaCliente);
 
       } else if (tipo === 'servicio_reparacion_general') {
@@ -1534,7 +1594,7 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
         addCheck(d.solucionListaEntrega, 'Solucion lista para entrega, opera con normalidad');
         addField('Colaborador responsable', d.nombreColaborador);
         addSpacer();
-        addField('Calificacion', `${d.calificacion}/10`);
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
         addField('Nombre de quien recibe', d.nombreFirmaCliente);
 
       } else {
@@ -1561,17 +1621,16 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
         addCheck(d.sabesolicitarSoporte, 'Se como solicitar soporte tecnico en caso de requerir asistencia futura');
         addCheck(d.entiendeLimitesGarantia, 'Entiendo que danos por descargas electricas o manipulacion indebida no aplican como garantia');
         addSpacer();
-        addField('Calificacion', `${d.calificacion}/10`);
-        addField('NPS', d.nps);
-        addField('Nombre del cliente', d.nombreFirmaCliente);
+        addField('Calificacion sobre nuestro servicio', `${d.calificacion}/10`);
+        addField('Calificacion para referenciado', d.nps);
       }
-      
-      // Firma al final de cada hoja — usa funcion dedicada
-      addFirma(tipo, hojaData);
 
+      // Firma al final de cada hoja
+      addFirma(tipo, hojaData);
       primeraHoja = false;
     }
 
+    // Footer en todas las paginas
     const totalPages = (doc.internal as any).getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
@@ -1580,7 +1639,7 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
       doc.setFontSize(7);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(255, 255, 255);
-      doc.text('Gracias por confiar en Sistemas Integra - El Motor Tecnologico de tu Empresa', margin, 293);
+      doc.text('Gracias por permitirnos ser su socio tecnologico', margin, 293);
       doc.text(`Pagina ${i} de ${totalPages}`, pageWidth - margin, 293, { align: 'right' });
     }
 
@@ -1593,6 +1652,11 @@ const tiposAGenerar = this.hojasGuardadas.length > 0
   get fechaTarea(): string {
     if (!this.task?.fechaProgramada) return new Date().toLocaleDateString('es-MX');
     return new Date(this.task.fechaProgramada).toLocaleDateString('es-MX');
+  }
+
+  async guardarYSalir() {
+    await this.guardar();
+    this.goBack();
   }
 
   goBack() { history.back(); }

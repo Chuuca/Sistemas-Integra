@@ -6,6 +6,7 @@
     <nav class="navbar">
       <div class="nav-left">
         <button class="back-btn" (click)="goBack()">← Volver</button>
+        <button class="back-btn" (click)="router.navigate(['/home'])">🏠 Panel de servicios</button>
         <svg width="28" height="28" viewBox="0 0 48 48">
           <circle cx="24" cy="24" r="22" fill="#1DA5A0"/>
           <circle cx="24" cy="24" r="12" fill="#1E3A6E"/>
@@ -48,14 +49,14 @@
             </div>
             @if (task.notas) {
               <div class="section-card">
-                <div class="section-header"><span> Notas</span></div>
+                <div class="section-header"><span>Notas</span></div>
                 <p class="desc-text">{{ task.notas }}</p>
               </div>
             }
           </div>
           <div class="right-col">
             <div class="section-card">
-              <div class="section-header"><span> Costo de materiales</span></div>
+              <div class="section-header"><span>Costo de materiales</span></div>
               <div class="cobro-field">
                 <label>Monto ($)</label>
                 <div class="abono-row">
@@ -77,7 +78,7 @@
             </div>
 
             <div class="section-card">
-              <div class="section-header"><span> Estado del pedido</span></div>
+              <div class="section-header"><span>Estado del pedido</span></div>
               <div class="status-btns">
                 <button [class.active]="task.estado==='pendiente'"
                         (click)="updateStatus('pendiente')">⏳ Pendiente</button>
@@ -131,7 +132,7 @@
           <div class="left-col">
 
             <div class="section-card">
-              <div class="section-header"><span> Descripción del trabajo</span></div>
+              <div class="section-header"><span>Descripción del trabajo</span></div>
               @if (task.descripcion) {
                 <p class="desc-text">{{ task.descripcion }}</p>
               } @else {
@@ -140,20 +141,7 @@
             </div>
 
             <div class="section-card">
-              <div class="section-header"><span> Material necesario</span></div>
-              @if (task.materiales.length) {
-                <ul class="material-list">
-                  @for (m of task.materiales; track $index) {
-                    <li>{{ m }}</li>
-                  }
-                </ul>
-              } @else {
-                <p class="empty-text">Sin materiales registrados.</p>
-              }
-            </div>
-
-            <div class="section-card">
-              <div class="section-header"><span> Herramientas especiales</span></div>
+              <div class="section-header"><span>Herramientas especiales</span></div>
               <div class="equipo-input">
                 <input [(ngModel)]="newHerramienta"
                        placeholder="Agregar herramienta..."
@@ -175,7 +163,7 @@
             </div>
 
             <div class="section-card">
-              <div class="section-header"><span> Equipos</span></div>
+              <div class="section-header"><span>Equipos</span></div>
               <div class="equipo-input">
                 <input [(ngModel)]="newEquipoItem"
                        placeholder="Agregar equipo..."
@@ -196,51 +184,96 @@
               }
             </div>
 
-            <div class="section-card">
-              <div class="section-header"><span> Notas adicionales</span></div>
-              @if (task.notas) {
-                <p class="desc-text">{{ task.notas }}</p>
-              } @else {
-                <p class="empty-text">Sin notas adicionales.</p>
-              }
-            </div>
-
           </div>
 
           <div class="right-col">
 
-           <div class="section-card timer-card">
-  <div class="section-header"><span>Cronometro de actividad</span></div>
-  <div class="timer-display">{{ timerDisplay }}</div>
+            <!-- ── ASIGNACION DE TECNICO (solo admin) ── -->
+            @if (isAdmin) {
+              <div class="section-card">
+                <div class="section-header">
+                  <span>👤 Técnico asignado</span>
+                  <button class="btn-edit-asignacion"
+                          (click)="mostrarAsignacion = !mostrarAsignacion">
+                    {{ mostrarAsignacion ? 'Cancelar' : 'Reasignar' }}
+                  </button>
+                </div>
 
+                <p class="desc-text" style="margin-bottom:8px;">
+                  {{ asignadosNombres || 'Sin técnico asignado' }}
+                </p>
+
+                @if (mostrarAsignacion) {
+                  <div class="asignacion-lista">
+                    @for (t of tecnicosDisponibles; track t.uid) {
+                      <label class="asignacion-item">
+                        <input type="checkbox"
+                               [checked]="esTecnicoSeleccionado(t.uid)"
+                               (change)="toggleTecnico(t.uid)"/>
+                        <span>{{ t.nombre }}</span>
+                        <span class="rol-badge">{{ t.rol }}</span>
+                      </label>
+                    }
+                  </div>
+
+                  <button class="btn-guardar-asignacion"
+                          (click)="guardarAsignacion()"
+                          [disabled]="guardandoTecnicos || tecnicosSeleccionados.length === 0">
+                    {{ guardandoTecnicos ? 'Guardando...' : 'Guardar asignación' }}
+                  </button>
+                }
+
+                @if (tecnicosGuardados) {
+                  <p class="asignacion-ok">✅ Asignación actualizada</p>
+                }
+              </div>
+            }
+
+           <!-- CRONOMETRO PERSISTENTE (Check-in/Check-out) -->
+<div class="section-card timer-card">
+  <div class="section-header"><span>Cronometro de actividad</span></div>
+  
+  <!-- Display principal -->
+  <div class="timer-display">{{ formatTiempoPersistente(tiempoActual) }}</div>
+
+  <!-- Estado actual -->
   <div class="estado-tecnico-badge"
-       [class.en-sitio]="estadoTecnico === 'en_sitio'"
-       [class.en-traslado]="estadoTecnico === 'traslado'"
-       [class.disponible]="estadoTecnico === 'disponible'">
-    @if (estadoTecnico === 'disponible') { Sin iniciar }
-    @if (estadoTecnico === 'en_sitio') { En sitio }
-    @if (estadoTecnico === 'traslado') { En traslado }
+       [class.en-sitio]="tareaEnProgreso"
+       [class.disponible]="!tareaEnProgreso">
+    @if (tareaEnProgreso) { 
+      ⏱️ En curso 
+    } @else { 
+      ⏸️ Pausado 
+    }
   </div>
 
+  <!-- Botones de control -->
   <div class="timer-controls">
-    @if (!timerRunning && task.estado !== 'completada') {
-      <button class="btn-timer-start" (click)="startTimer()" [disabled]="guardandoEstado">
-        Iniciar — Llegar al sitio
+    @if (!tareaEnProgreso && task.estado !== 'completada') {
+      <button class="btn-timer-start" (click)="toggleCronometroPersistente()" [disabled]="guardandoEstado">
+        ▶ Iniciar jornada
       </button>
     }
-    @if (timerRunning && estadoTecnico === 'en_sitio') {
-      <button class="btn-timer-traslado" (click)="marcarEnTraslado()" [disabled]="guardandoEstado">
-        Saliendo del sitio
-      </button>
-    }
-    @if (timerRunning) {
-      <button class="btn-timer-stop" (click)="stopTimer()" [disabled]="guardandoEstado">
-        Finalizar servicio
+    @if (tareaEnProgreso) {
+      <button class="btn-timer-stop" (click)="toggleCronometroPersistente()" [disabled]="guardandoEstado">
+        ⏸ Pausar jornada
       </button>
     }
     @if (task.estado === 'completada') {
-      <div class="timer-done">Servicio completado</div>
+      <div class="timer-done">✅ Servicio completado</div>
     }
+  </div>
+
+  <!-- Información adicional -->
+  <div class="timer-info">
+    <small>
+      ⏱️ El tiempo se guarda automáticamente y continúa aunque cierres la página.
+      @if (tareaEnProgreso) {
+        <span class="info-active">El cronómetro está activo.</span>
+      } @else {
+        <span class="info-paused">Presiona "Iniciar jornada" cuando llegues al sitio.</span>
+      }
+    </small>
   </div>
 </div>
 
@@ -252,8 +285,9 @@
               </button>
             </div>
 
+            <!-- COBRANZA -->
             <div class="section-card">
-              <div class="section-header"><span> Cobranza</span></div>
+              <div class="section-header"><span>Cobranza</span></div>
               <p class="monto">${{ task.monto | number }}</p>
               <div class="payment-btns">
                 <button [class.active-pagado]="task.pago==='pagado'"
@@ -261,7 +295,7 @@
                 <button [class.active-no-pagado]="task.pago==='no_pagado'"
                         (click)="updatePayment('no_pagado')">NO PAGADO</button>
                 <button [class.active-abono]="task.pago==='abono'"
-                        (click)="updatePayment('abono')">ABONO</button>
+                        (click)="updatePayment('abono')">Con saldo pendiente</button>
               </div>
 
               @if (task.pago === 'abono') {
@@ -296,13 +330,9 @@
               <div class="cobro-section">
                 <div class="field-row">
                   <div class="cobro-field">
-                    <label>Anticipo recibido ($)</label>
+                    <label>Pago recibido por técnico ($)</label>
                     <input type="number" [(ngModel)]="task.anticipoRecibido"
                            placeholder="0" min="0" (change)="updateCobranza()"/>
-                  </div>
-                  <div class="cobro-field">
-                    <label>Saldo restante</label>
-                    <p class="saldo-restante">${{ (task.monto - (task.anticipoRecibido || 0)) | number }}</p>
                   </div>
                 </div>
                 <div class="cobro-field" style="margin-top:10px">
@@ -315,8 +345,9 @@
               </div>
             </div>
 
+            <!-- NUMEROS DE SERIE -->
             <div class="section-card">
-              <div class="section-header"><span> Números de serie</span></div>
+              <div class="section-header"><span>Números de serie</span></div>
               <div class="equipo-input">
                 <input [(ngModel)]="newEquipo" placeholder="Agregar N° de serie..."
                        (keyup.enter)="addEquipo()"/>
@@ -336,6 +367,7 @@
               }
             </div>
 
+            <!-- ESTADO DEL SERVICIO -->
             <div class="section-card">
               <div class="section-header"><span>📊 Estado del servicio</span></div>
               <div class="status-btns">

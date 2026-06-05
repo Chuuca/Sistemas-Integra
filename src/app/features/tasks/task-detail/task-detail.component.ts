@@ -17,7 +17,7 @@ import { User } from '../../../core/models/user.model';
 })
 export class TaskDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  router = inject(Router);
   private tasksService = inject(TasksService);
   private authService = inject(AuthService);
   private attendanceService = inject(AttendanceService);
@@ -42,6 +42,19 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
   montoAbonado = 0;
   montoPedidoGuardado = false;
 
+  // Asignación de técnico
+  tecnicosDisponibles: { uid: string; nombre: string; rol: string }[] = [];
+  tecnicosSeleccionados: string[] = [];   // UIDs seleccionados
+  guardandoTecnicos = false;
+  tecnicosGuardados = false;
+  mostrarAsignacion = false;
+
+  // Cronómetro persistente
+  tiempoActual: number = 0;
+  cronometroInterval: any;
+  tareaEnProgreso: boolean = false;
+  actualizandoCronometro: boolean = false;
+
   get montoPendiente(): number {
     return (this.task?.monto || 0) - (this.task?.montoAbonado || 0);
   }
@@ -63,6 +76,13 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
       this.currentUser = u;
       this.isAdmin = u?.rol === 'admin';
       this.cdr.detectChanges();
+
+      if (this.isAdmin) {
+        this.tasksService.getUsers().then(users => {
+          this.tecnicosDisponibles = users.filter(u => u.rol === 'tecnico' || u.rol === 'admin');
+          this.cdr.detectChanges();
+        });
+      }
     });
 
     if (id) {
@@ -82,7 +102,10 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
           };
           this.montoAbonado = this.task.montoAbonado || 0;
           this.timerSeconds = (this.task.tiempoTotal || 0) * 60;
+          
           this.updateDisplay();
+
+          this.tecnicosSeleccionados = [...(this.task.asignadoA || [])];
 
           if (this.task.estado === 'en_progreso') {
             this.estadoTecnico = 'en_sitio';
@@ -97,11 +120,109 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     } else {
       this.loading = false;
     }
+
+    // Iniciar actualización del cronómetro persistente
+    this.iniciarActualizacionCronometro();
   }
 
   ngOnDestroy() {
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.cronometroInterval) clearInterval(this.cronometroInterval);
   }
+
+  // ── Cronómetro persistente (Check-in/Check-out) ────────────────────────────
+
+  iniciarActualizacionCronometro() {
+    this.cronometroInterval = setInterval(async () => {
+      if (this.task?.id && !this.actualizandoCronometro) {
+        this.actualizandoCronometro = true;
+        try {
+          const tiempo = await this.tasksService.getTiempoActual(this.task.id);
+          this.tiempoActual = tiempo;
+          this.tareaEnProgreso = this.task.tiempoInicio !== null;
+          this.cdr.detectChanges();
+        } catch (e) {
+          console.error('Error obteniendo tiempo:', e);
+        }
+        this.actualizandoCronometro = false;
+      }
+    }, 1000);
+  }
+
+  async toggleCronometroPersistente() {
+    if (!this.task?.id) return;
+    
+    if (this.tareaEnProgreso) {
+      // Pausar tarea
+      await this.tasksService.marcarPausaTarea(this.task.id);
+      this.task.tiempoInicio = null;
+      this.task.estado = 'pendiente';
+      await this.updateStatus('pendiente');
+      await this.setEstadoTecnico('disponible');
+    } else {
+      // Iniciar tarea
+      await this.tasksService.marcarInicioTarea(this.task.id);
+      this.task.tiempoInicio = new Date();
+      this.task.estado = 'en_progreso';
+      await this.updateStatus('en_progreso');
+      await this.setEstadoTecnico('en_sitio');
+    }
+    
+    // Recargar tarea actualizada
+    const tareaActualizada = await this.tasksService.getTask(this.task.id);
+    if (tareaActualizada) {
+      this.task = tareaActualizada;
+    }
+    this.tareaEnProgreso = this.task.tiempoInicio !== null;
+    this.cdr.detectChanges();
+  }
+
+  formatTiempoPersistente(segundos: number): string {
+    const horas = Math.floor(segundos / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+    const segs = Math.floor(segundos % 60);
+    return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
+  }
+
+  // ── Asignación de técnicos ──────────────────────────────────────────────────
+
+  toggleTecnico(uid: string) {
+    const idx = this.tecnicosSeleccionados.indexOf(uid);
+    if (idx === -1) this.tecnicosSeleccionados.push(uid);
+    else this.tecnicosSeleccionados.splice(idx, 1);
+  }
+
+  esTecnicoSeleccionado(uid: string): boolean {
+    return this.tecnicosSeleccionados.includes(uid);
+  }
+
+  async guardarAsignacion() {
+    if (!this.task?.id || this.tecnicosSeleccionados.length === 0) return;
+    this.guardandoTecnicos = true;
+
+    const nombres = this.tecnicosSeleccionados
+      .map(uid => this.tecnicosDisponibles.find(t => t.uid === uid)?.nombre ?? '')
+      .filter(Boolean);
+
+    try {
+      await this.tasksService.updateTask(this.task.id, {
+        asignadoA: this.tecnicosSeleccionados,
+        asignadoNombre: nombres,
+      });
+      this.task.asignadoA = this.tecnicosSeleccionados;
+      this.task.asignadoNombre = nombres;
+      this.tecnicosGuardados = true;
+      this.mostrarAsignacion = false;
+      setTimeout(() => { this.tecnicosGuardados = false; this.cdr.detectChanges(); }, 2500);
+    } catch (e) {
+      console.error('Error asignando técnicos:', e);
+    }
+
+    this.guardandoTecnicos = false;
+    this.cdr.detectChanges();
+  }
+
+  // ── Cronómetro original (legacy) ─────────────────────────────────────────────
 
   async startTimer() {
     if (this.timerRunning || !this.task?.id || !this.currentUser) return;
@@ -174,10 +295,18 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     this.timerDisplay = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
 
+  // ── Estado y pagos ─────────────────────────────────────────────────────────
+
   async updateStatus(estado: any) {
     if (this.task?.id) {
-      await this.tasksService.updateTask(this.task.id, { estado });
+      const data: any = { estado };
+      if (estado === 'completada' && !this.task.completadoEn) {
+        data.completadoEn = new Date();
+        if (!this.task.tiempoTotal) data.tiempoTotal = Math.floor(this.timerSeconds / 60);
+      }
+      await this.tasksService.updateTask(this.task.id, data);
       this.task.estado = estado;
+      if (data.completadoEn) (this.task as any).completadoEn = data.completadoEn;
       this.cdr.detectChanges();
     }
   }
@@ -235,6 +364,8 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Herramientas y equipos ─────────────────────────────────────────────────
+
   async addHerramienta() {
     const v = this.newHerramienta?.trim();
     if (!v || !this.task?.id) return;
@@ -290,6 +421,8 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     this.task.equiposNumeroDeSerie = equipos;
     this.cdr.detectChanges();
   }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   goBack() { history.back(); }
   stars(n: number) { return Array(n).fill(0); }

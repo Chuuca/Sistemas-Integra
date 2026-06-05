@@ -10,27 +10,32 @@ export interface Task {
   direccion: string;
   telefono: string;
   descripcion: string;
-  prioridad: TaskPriority;
+  prioridad: 1 | 2 | 3;
   asignadoA: string[];
-  asignadoNombre?: string[];
-  estado: TaskStatus;
-  pago: PaymentStatus;
+  asignadoNombre: string[];
+  estado: 'pendiente' | 'en_progreso' | 'completada';
+  pago: 'pagado' | 'no_pagado' | 'abono';
   monto: number;
   montoAbonado?: number;
-  anticipoRecibido?: number;
-  saldoRestante?: number;
-  planCobro?: PlanCobro;
-  fechaProgramada: Date;
-  horaProgramada?: string;
-  duracionEstimada?: number;
+  fechaProgramada: Date | string;
+  horaProgramada: string;
+  duracionEstimada: number;
   materiales: string[];
-  herramientasEspeciales?: string[];
-  equipos?: string[];
   equiposNumeroDeSerie: string[];
   tiempoTotal: number;
-  notas?: string;
-  firmaUrl?: string;
+  notas: string;
+  herramientasEspeciales: string[];
+  equipos: string[];
   creadoPor: string;
   creadoEn: Date;
   completadoEn?: Date;
+  
+  // Nuevas propiedades para cobranza
+  anticipoRecibido?: number;
+  saldoRestante?: number;
+  planCobro?: 'al_finalizar' | 'anticipo' | 'contado';
+  
+  // Nuevas propiedades para cronómetro persistente
+  tiempoInicio?: Date | null;        // Fecha/hora de inicio de la tarea (si está en progreso)
+  ultimaActualizacionCrono?: Date;   // Última vez que se actualizó el cronómetro
 }

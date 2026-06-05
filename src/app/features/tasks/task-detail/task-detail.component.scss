@@ -496,3 +496,34 @@
   background: #DCFCE7;
   border-radius: 20px;
 }
+.timer-info {
+  margin-top: 12px;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 8px;
+  text-align: center;
+  
+  small {
+    color: #475569;
+    font-size: 11px;
+  }
+  
+  .info-active {
+    color: #10b981;
+    font-weight: 500;
+  }
+  
+  .info-paused {
+    color: #f59e0b;
+    font-weight: 500;
+  }
+}
+
+.btn-timer-pause {
+  background: #f59e0b;
+  color: white;
+  
+  &:hover {
+    background: #d97706;
+  }
+}

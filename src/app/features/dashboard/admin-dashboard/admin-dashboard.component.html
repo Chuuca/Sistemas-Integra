@@ -255,7 +255,7 @@
             <select [(ngModel)]="form.pago">
               <option value="no_pagado">No pagado</option>
               <option value="pagado">Pagado</option>
-              <option value="abono">Abono</option>
+              <option value="abono">Con saldo pendiente</option>
             </select>
           </div>
           <div class="field">
@@ -277,25 +277,35 @@
         </div>
 
         <div class="field">
-          <label>Materiales</label>
+          <label>Herramientas especiales</label>
           <div class="material-input">
-            <input [(ngModel)]="form.materialInput" placeholder="Agregar material..."
-                   (keyup.enter)="addMaterial()"/>
-            <button (click)="addMaterial()">+</button>
+            <input [(ngModel)]="form.herramientasInput" placeholder="Agregar herramienta..."
+                   (keyup.enter)="addHerramienta()"/>
+            <button (click)="addHerramienta()">+</button>
           </div>
           <div class="material-list">
-            @for (m of form.materiales; track $index; let i = $index) {
+            @for (h of form.herramientasEspeciales; track $index; let i = $index) {
               <span class="material-tag">
-                {{ m }} <span (click)="removeMaterial(i)">✕</span>
+                {{ h }} <span (click)="removeHerramienta(i)">✕</span>
               </span>
             }
           </div>
         </div>
 
         <div class="field">
-          <label>Notas adicionales</label>
-          <textarea [(ngModel)]="form.notas" rows="2"
-                    placeholder="Observaciones especiales..."></textarea>
+          <label>Equipos</label>
+          <div class="material-input">
+            <input [(ngModel)]="form.equiposInput" placeholder="Agregar equipo..."
+                   (keyup.enter)="addEquipoForm()"/>
+            <button (click)="addEquipoForm()">+</button>
+          </div>
+          <div class="material-list">
+            @for (e of form.equipos; track $index; let i = $index) {
+              <span class="material-tag">
+                {{ e }} <span (click)="removeEquipoForm(i)">✕</span>
+              </span>
+            }
+          </div>
         </div>
       </div>
 

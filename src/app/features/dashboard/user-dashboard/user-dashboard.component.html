@@ -300,6 +300,9 @@
       <button class="btn-pedido" (click)="showPedidoModal = true">
         📦 Pedido de materiales
       </button>
+      <button class="btn-whatsapp" (click)="abrirWhatsApp()">
+        💬 Abrir WhatsApp
+      </button>
     </div>
 
   </div>
@@ -398,7 +401,35 @@
         <button class="btn-primary" style="flex:2"
                 (click)="enviarPedido()"
                 [disabled]="!pedidoTexto.trim() || enviandoPedido">
-          {{ enviandoPedido ? 'Enviando...' : '📤 Enviar pedido al admin' }}
+          {{ enviandoPedido ? 'Enviando...' : '📤 Enviar pedido a compras' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL REPORTE DEL DÍA AL SALIR -->
+@if (showReporteModal) {
+  <div class="modal-overlay">
+    <div class="modal-revision" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>📊 Enviar reporte del día</h2>
+      </div>
+      <div class="modal-revision-body">
+        <p style="margin-bottom:16px; color:#555;">
+          ¡Jornada registrada! ¿Deseas enviar el resumen del día a tu correo?
+        </p>
+        <div style="background:#f8f8f8; border-radius:8px; padding:12px; margin-bottom:8px;">
+          <p><strong>Tareas completadas hoy:</strong> {{ completedTasks.length }}</p>
+          <p><strong>Tiempo total trabajado:</strong> {{ tiempoTotal }}</p>
+        </div>
+      </div>
+      <div class="modal-revision-footer" style="display:flex; gap:10px;">
+        <button class="btn-secondary" style="flex:1" (click)="showReporteModal = false">
+          Cerrar
+        </button>
+        <button class="btn-primary" style="flex:2" (click)="enviarReporteEmail(); showReporteModal = false">
+          📧 Enviar reporte al correo
         </button>
       </div>
     </div>
