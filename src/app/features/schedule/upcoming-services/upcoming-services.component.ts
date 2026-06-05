@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TasksService } from '../../../core/services/tasks.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Task } from '../../../core/models/task.model';
+import { Task, getPriorityText, getPriorityClass, isTaskOverdue } from '../../../core/models/task.model';
 import { User } from '../../../core/models/user.model';
 
 @Component({
@@ -44,17 +44,17 @@ export class UpcomingServicesComponent implements OnInit {
             ...task,
             materiales: task.materiales || [],
             equiposNumeroDeSerie: task.equiposNumeroDeSerie || [],
-            fechaProgramada: (task.fechaProgramada as any)?.toDate?.() ?? task.fechaProgramada,
-            creadoEn: (task.creadoEn as any)?.toDate?.() ?? task.creadoEn,
+            fechaProgramada: this.normalizeDate(task.fechaProgramada),
+            creadoEn: this.normalizeDate(task.creadoEn),
           }))
-         .filter(task => {
-  if (task.estado === 'completada') return false;
-  const fecha = new Date(task.fechaProgramada);
-  fecha.setHours(0, 0, 0, 0);
-  return fecha >= tomorrow;
-})
+          .filter(task => {
+            if (task.estado === 'completada') return false;
+            const fecha = this.normalizeDate(task.fechaProgramada);
+            fecha.setHours(0, 0, 0, 0);
+            return fecha >= tomorrow;
+          })
           .sort((a, b) =>
-            new Date(a.fechaProgramada).getTime() - new Date(b.fechaProgramada).getTime()
+            this.normalizeDate(a.fechaProgramada).getTime() - this.normalizeDate(b.fechaProgramada).getTime()
           );
 
         this.cdr.detectChanges();
@@ -62,51 +62,86 @@ export class UpcomingServicesComponent implements OnInit {
     });
   }
 
-  getDateLabel(fecha: Date): string {
-    const d = new Date(fecha);
-    const hoy = new Date();
-    const manana = new Date();
-    manana.setDate(hoy.getDate() + 1);
+  // Método auxiliar para normalizar fechas (string | Date | Firebase Timestamp)
+  private normalizeDate(fecha: any): Date {
+    if (!fecha) return new Date();
+    if (fecha instanceof Date) return fecha;
+    if (typeof fecha === 'string') return new Date(fecha);
+    if (fecha.toDate && typeof fecha.toDate === 'function') return fecha.toDate();
+    return new Date(fecha);
+  }
 
-    if (d.toDateString() === hoy.toDateString()) return 'Hoy';
-    if (d.toDateString() === manana.toDateString()) return 'Mañana';
+  // ── Métodos de fechas ──────────────────────────────────────
+  getDateLabel(fecha: any): string {
+    const d = this.normalizeDate(fecha);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const manana = new Date(hoy);
+    manana.setDate(hoy.getDate() + 1);
+    
+    d.setHours(0, 0, 0, 0);
+
+    if (d.getTime() === hoy.getTime()) return 'Hoy';
+    if (d.getTime() === manana.getTime()) return 'Mañana';
 
     const diff = Math.floor((d.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
     if (diff < 0) return 'Vencido';
     return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
-  getDateClass(fecha: Date): string {
-    const d = new Date(fecha);
+  getDateClass(fecha: any): string {
+    const d = this.normalizeDate(fecha);
     const hoy = new Date();
-    const manana = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const manana = new Date(hoy);
     manana.setDate(hoy.getDate() + 1);
+    
+    d.setHours(0, 0, 0, 0);
 
-    if (d.toDateString() === hoy.toDateString()) return 'hoy';
-    if (d.toDateString() === manana.toDateString()) return 'manana';
-    if (d < hoy) return 'vencido';
+    if (d.getTime() === hoy.getTime()) return 'hoy';
+    if (d.getTime() === manana.getTime()) return 'manana';
+    if (d.getTime() < hoy.getTime()) return 'vencido';
     return 'programado';
   }
 
-  getPriorityLabel(p: number): string {
-    return p === 3 ? 'Alta' : p === 2 ? 'Media' : 'Baja';
+  // ── Métodos de prioridad usando el modelo ───────────────────
+  getPriorityLabel(priority: number): string {
+    return getPriorityText(priority as 1|2|3);
   }
 
-  getPriorityClass(p: number): string {
-    return p === 3 ? 'alta' : p === 2 ? 'media' : 'baja';
+  getPriorityClass(priority: number): string {
+    return getPriorityClass(priority as 1|2|3);
   }
 
+  // ── Método para verificar si está vencida usando el modelo ──
+  isTaskOverdue(task: Task): boolean {
+    return isTaskOverdue(task);
+  }
+
+  // ── Formato de hora ────────────────────────────────────────
   formatHora(hora: string): string {
     if (!hora) return '';
     const [h, m] = hora.split(':').map(Number);
     const ampm = h >= 12 ? 'PM' : 'AM';
     const h12 = h % 12 || 12;
-    return `${String(h12).padStart(2,'0')}:${String(m).padStart(2,'0')} ${ampm}`;
+    return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
   }
 
-  openTask(id: string) { this.router.navigate(['/tasks', id]); }
-  goBack() { history.back(); }
+  // ── Navegación ─────────────────────────────────────────────
+  openTask(id: string) { 
+    this.router.navigate(['/tasks', id]); 
+  }
+  
+  goBack() { 
+    history.back(); 
+  }
 
-  get totalProximos() { return this.tasks.length; }
-  get vencidos() { return this.tasks.filter(t => this.getDateClass(t.fechaProgramada) === 'vencido').length; }
+  // ── Getters ────────────────────────────────────────────────
+  get totalProximos() { 
+    return this.tasks.length; 
+  }
+  
+  get vencidos() { 
+    return this.tasks.filter(t => this.getDateClass(t.fechaProgramada) === 'vencido').length; 
+  }
 }

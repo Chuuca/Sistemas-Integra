@@ -114,9 +114,9 @@
               @if (task.horaProgramada) {
                 <span>🕐 {{ formatHora(task.horaProgramada) }}</span>
               }
-              @if (task.fechaProgramada) {
-                <span>📅 {{ task.fechaProgramada | date:'dd/MM/yyyy' }}</span>
-              }
+             @if (task.fechaProgramada) {
+  <span>📅 {{ getFechaAsDate(task.fechaProgramada) | date:'dd/MM/yyyy' }}</span>
+}
               @if (task.duracionEstimada) {
                 <span>⏳ {{ task.duracionEstimada }} min estimados</span>
               }
@@ -148,7 +148,7 @@
                        (keyup.enter)="addHerramienta()"/>
                 <button (click)="addHerramienta()">+</button>
               </div>
-              @if (task.herramientasEspeciales?.length) {
+            @if (task.herramientasEspeciales.length) {
                 <div class="equipo-list">
                   @for (h of task.herramientasEspeciales!; track $index; let i = $index) {
                     <div class="equipo-item">
@@ -170,7 +170,7 @@
                        (keyup.enter)="addEquipoItem()"/>
                 <button (click)="addEquipoItem()">+</button>
               </div>
-              @if (task.equipos?.length) {
+             @if (task.equipos.length) {
                 <div class="equipo-list">
                   @for (e of task.equipos!; track $index; let i = $index) {
                     <div class="equipo-item">
@@ -345,27 +345,7 @@
               </div>
             </div>
 
-            <!-- NUMEROS DE SERIE -->
-            <div class="section-card">
-              <div class="section-header"><span>Números de serie</span></div>
-              <div class="equipo-input">
-                <input [(ngModel)]="newEquipo" placeholder="Agregar N° de serie..."
-                       (keyup.enter)="addEquipo()"/>
-                <button (click)="addEquipo()">+</button>
-              </div>
-              @if (task.equiposNumeroDeSerie.length) {
-                <div class="equipo-list">
-                  @for (e of task.equiposNumeroDeSerie; track $index; let i = $index) {
-                    <div class="equipo-item">
-                      <span>🔩 {{ e }}</span>
-                      <button (click)="removeEquipo(i)">✕</button>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <p class="empty-text">Sin equipos registrados.</p>
-              }
-            </div>
+           
 
             <!-- ESTADO DEL SERVICIO -->
             <div class="section-card">

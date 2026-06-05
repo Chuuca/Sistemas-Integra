@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { TasksService } from '../../../core/services/tasks.service';
 import { UsersService } from '../../../core/services/users.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Task } from '../../../core/models/task.model';
+import { Task, createEmptyTask, getTaskStatusText, getPaymentStatusText, getPriorityText, getPriorityClass, calculateSaldoRestante } from '../../../core/models/task.model';
 import { User } from '../../../core/models/user.model';
 import { Subscription } from 'rxjs';
 import jsPDF from 'jspdf';
@@ -46,6 +46,36 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     equipos: [] as string[], equiposInput: ''
   };
 
+  // ── Método auxiliar para normalizar fechas ──────────────────────────────
+  private normalizeDate(fecha: any): Date {
+    if (!fecha) return new Date();
+    if (fecha instanceof Date) return fecha;
+    if (typeof fecha === 'string') return new Date(fecha);
+    if (fecha.toDate && typeof fecha.toDate === 'function') return fecha.toDate();
+    return new Date(fecha);
+  }
+
+  // ── Métodos del modelo para usar en el template ─────────────────────────
+  getTaskStatusText(status: string): string {
+    return getTaskStatusText(status as any);
+  }
+
+  getPaymentStatusText(payment: string): string {
+    return getPaymentStatusText(payment as any);
+  }
+
+  getPriorityText(priority: number): string {
+    return getPriorityText(priority as 1|2|3);
+  }
+
+  getPriorityClass(priority: number): string {
+    return getPriorityClass(priority as 1|2|3);
+  }
+
+  calculateSaldoRestante(task: Task): number {
+    return calculateSaldoRestante(task);
+  }
+
   // ── Ciclo de vida ──────────────────────────────────────────
   ngOnInit() {
     this.tasksService.deleteOldCompletedTasks();
@@ -57,8 +87,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         equiposNumeroDeSerie: task.equiposNumeroDeSerie || [],
         asignadoA: Array.isArray(task.asignadoA) ? task.asignadoA : [task.asignadoA],
         asignadoNombre: Array.isArray(task.asignadoNombre) ? task.asignadoNombre : [task.asignadoNombre || ''],
-        fechaProgramada: (task.fechaProgramada as any)?.toDate?.() ?? task.fechaProgramada,
-        creadoEn: (task.creadoEn as any)?.toDate?.() ?? task.creadoEn,
+        fechaProgramada: this.normalizeDate(task.fechaProgramada),
+        creadoEn: this.normalizeDate(task.creadoEn),
       }));
       this.applyFilter();
       this.cdr.detectChanges();
@@ -124,7 +154,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       );
 
       const tareasHoy = userTasks.filter(t => {
-        const fecha = new Date(t.fechaProgramada);
+        const fecha = this.normalizeDate(t.fechaProgramada);
         fecha.setHours(0, 0, 0, 0);
         return fecha >= today && fecha < tomorrow;
       });
@@ -165,17 +195,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         asignadoA: Array.isArray(task.asignadoA) ? [...task.asignadoA] : [task.asignadoA as any],
         monto: task.monto,
         pago: task.pago,
-        fechaProgramada: task.fechaProgramada
-          ? new Date(task.fechaProgramada).toLocaleDateString('en-CA')
-          : '',
+        fechaProgramada: this.normalizeDate(task.fechaProgramada).toLocaleDateString('en-CA'),
         horaProgramada: task.horaProgramada || '',
         materiales: [...(task.materiales || [])],
         notas: task.notas || '',
         materialInput: '',
         duracionEstimada: task.duracionEstimada || 0,
-        herramientasEspeciales: [...((task as any).herramientasEspeciales || [])],
+        herramientasEspeciales: [...(task.herramientasEspeciales || [])],
         herramientasInput: '',
-        equipos: [...((task as any).equipos || [])],
+        equipos: [...(task.equipos || [])],
         equiposInput: ''
       };
     } else {
@@ -239,47 +267,74 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     return arr.map(uid => this.users.find(u => u.uid === uid)?.nombre ?? uid).join(', ');
   }
 
-  // ── Guardar tarea ──────────────────────────────────────────
-  async saveTask() {
+  // ── Guardar tarea usando createEmptyTask ──────────────────────────
+ async saveTask() {
+  try {
     const nombresAsignados = this.form.asignadoA.map(uid =>
-      this.users.find(u => u.uid === u.uid)?.nombre || ''
+      this.users.find(u => u.uid === uid)?.nombre || ''
     );
 
     const [y, m, d] = this.form.fechaProgramada.split('-').map(Number);
-    const fechaLocal = new Date(y, m - 1, d, 12, 0, 0);
+    const fechaLocal = this.form.fechaProgramada ? new Date(y, m - 1, d, 12, 0, 0) : new Date();
 
-    const taskData: Omit<Task, 'id'> = {
+    // Crear objeto SOLO con los campos que tienen valor
+    const taskData: any = {
       folioId: this.editingTask?.folioId || '',
       cliente: this.form.cliente,
-      direccion: this.form.direccion,
-      telefono: this.form.telefono,
-      descripcion: this.form.descripcion,
+      direccion: this.form.direccion || '',
+      telefono: this.form.telefono || '',
+      descripcion: this.form.descripcion || '',
       prioridad: this.form.prioridad,
       asignadoA: [...this.form.asignadoA],
       asignadoNombre: nombresAsignados,
       estado: this.editingTask?.estado || 'pendiente',
       pago: this.form.pago,
-      monto: this.form.monto,
+      monto: this.form.monto || 0,
       fechaProgramada: fechaLocal,
-      horaProgramada: this.form.horaProgramada,
-      duracionEstimada: this.form.duracionEstimada,
-      materiales: this.form.materiales,
+      horaProgramada: this.form.horaProgramada || '09:00',
+      duracionEstimada: this.form.duracionEstimada || 0,
+      materiales: this.form.materiales || [],
       equiposNumeroDeSerie: this.editingTask?.equiposNumeroDeSerie || [],
       tiempoTotal: this.editingTask?.tiempoTotal || 0,
-      notas: this.form.notas,
-      herramientasEspeciales: this.form.herramientasEspeciales,
-      equipos: this.form.equipos,
+      notas: this.form.notas || '',
+      herramientasEspeciales: this.form.herramientasEspeciales || [],
+      equipos: this.form.equipos || [],
       creadoPor: this.currentUser?.uid || '',
-      creadoEn: this.editingTask?.creadoEn || new Date()
-    } as any;
+      creadoEn: new Date(),
+      montoAbonado: 0,
+      anticipoRecibido: 0,
+      saldoRestante: this.form.monto || 0,
+      planCobro: 'al_finalizar'
+    };
+    
+  
+    // No incluir completadoEn, tiempoInicio, ultimaActualizacionCrono
 
     if (this.editingTask?.id) {
+      // Para actualización, puedes incluir más campos
       await this.tasksService.updateTask(this.editingTask.id, taskData);
     } else {
+      // Para creación, solo campos básicos
       await this.tasksService.createTask(taskData);
     }
+    
     this.closeModal();
+    
+    // Recargar tareas
+    this.tasksSub = this.tasksService.getAllTasks().subscribe(t => {
+      this.tasks = t.map(task => ({
+        ...task,
+        fechaProgramada: this.normalizeDate(task.fechaProgramada),
+        creadoEn: this.normalizeDate(task.creadoEn),
+      }));
+      this.applyFilter();
+      this.cdr.detectChanges();
+    });
+  } catch (error) {
+    console.error('Error al guardar tarea:', error);
+    alert('Error al guardar la tarea: ' + error);
   }
+}
 
   async deleteTask(id: string) {
     if (confirm('¿Eliminar esta tarea?')) {
@@ -306,21 +361,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   getStatusLabel(estado: string): string {
-    const labels: Record<string, string> = {
-      'pendiente': 'Pendiente',
-      'en_progreso': 'En progreso',
-      'completada': 'Completada'
-    };
-    return labels[estado] ?? estado;
+    return this.getTaskStatusText(estado);
   }
 
   getPaymentLabel(pago: string): string {
-    const labels: Record<string, string> = {
-      'pagado': 'Pagado',
-      'no_pagado': 'No pagado',
-      'abono': 'Abono'
-    };
-    return labels[pago] ?? pago;
+    return this.getPaymentStatusText(pago);
   }
   
   generandoReporte = false;
@@ -344,7 +389,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   async generarReportePDF() {
     this.generandoReporte = true;
 
-    // Cargar logo
     const logoBase64 = await this.cargarLogoBase64();
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -405,14 +449,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     doc.setFillColor(30, 58, 110);
     doc.rect(0, 0, pageWidth, 28, 'F');
 
-    // Logo
     if (logoBase64) {
       try {
         doc.addImage(logoBase64, 'PNG', margin, 2, 24, 24);
       } catch (e) { console.warn('Error insertando logo:', e); }
     }
 
-    // Texto del lado del logo
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
@@ -421,7 +463,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     doc.setFont('helvetica', 'normal');
     doc.text('Tecnologia  Seguridad  Control', margin + 28, 18);
     
-    // Título del reporte y fecha a la derecha
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Reporte del Dia', pageWidth - margin, 12, { align: 'right' });
@@ -431,14 +472,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     y = 35;
 
-    // Calcular datos del dia
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const tareasHoy = this.tasks.filter(t => {
-      const f = new Date(t.fechaProgramada);
+      const f = this.normalizeDate(t.fechaProgramada);
       f.setHours(0, 0, 0, 0);
       return f >= today && f < tomorrow && !t.cliente?.includes('Pedido');
     });
@@ -460,11 +500,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       .reduce((a, t) => a + (t.montoAbonado || 0), 0);
     const tiempoTotalHoy = completadasHoy.reduce((a, t) => a + (t.tiempoTotal || 0), 0);
 
-    // RESUMEN GENERAL
     addTitle('RESUMEN GENERAL DEL DIA');
     addSpacer();
 
-    // Tabla de metricas en 2 columnas
     const col1x = margin + 2;
     const col2x = pageWidth / 2 + 5;
 
@@ -491,7 +529,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     y += 16;
     addLine();
 
-    // COBRANZA DEL DIA
     addTitle('COBRANZA DEL DIA');
     addSpacer();
     addMetric('Monto total programado', `$${montoTotalHoy.toLocaleString('es-MX')}`, col1x, y, [30, 58, 110]);
@@ -502,7 +539,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     y += 16;
     addLine();
 
-    // RESUMEN POR TECNICO
     addTitle('RESUMEN POR TECNICO');
     addSpacer();
 
@@ -524,7 +560,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       doc.text(`Tiempo estimado: ${this.formatMinutos(tec.tiempoEstimado)}  |  Tiempo restante: ${this.formatMinutos(tec.tiempoRestante)}`, margin + 4, y);
       y += 6;
 
-      // Barra de progreso
       const barWidth = contentWidth - 4;
       doc.setFillColor(229, 231, 235);
       doc.rect(margin + 2, y, barWidth, 3, 'F');
@@ -536,7 +571,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       addLine();
     }
 
-    // DETALLE DE TAREAS DEL DIA
     addTitle('DETALLE DE TAREAS DEL DIA');
     addSpacer();
 
@@ -547,7 +581,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       doc.text('Sin tareas programadas para hoy.', margin + 2, y);
       y += 6;
     } else {
-      // Encabezado tabla
       doc.setFillColor(243, 244, 246);
       doc.rect(margin, y - 3, contentWidth, 7, 'F');
       doc.setFontSize(8);
@@ -568,16 +601,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
         const clienteStr = doc.splitTextToSize(t.cliente || '-', 60);
         const tecStr = doc.splitTextToSize(
-          Array.isArray(t.asignadoNombre) ? t.asignadoNombre.join(', ') : ((t.asignadoNombre as unknown as string) || '-'),
+          Array.isArray(t.asignadoNombre) ? t.asignadoNombre.join(', ') : (t.asignadoNombre as unknown as string || '-'),
           42
         );
-        const estadoStr = this.getStatusLabel(t.estado);
-        const pagoStr = this.getPaymentLabel(t.pago);
+        const estadoStr = this.getTaskStatusText(t.estado);
+        const pagoStr = this.getPaymentStatusText(t.pago);
         const montoStr = `$${(t.monto || 0).toLocaleString('es-MX')}`;
 
         const rowH = Math.max(clienteStr.length, tecStr.length) * 4 + 2;
 
-        // Color de fila por estado
         if (t.estado === 'completada') {
           doc.setFillColor(240, 253, 244);
           doc.rect(margin, y - 2, contentWidth, rowH, 'F');
@@ -600,7 +632,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     addSpacer();
 
-    // PEDIDOS PENDIENTES
     if (pedidosPendientes.length > 0) {
       addTitle('PEDIDOS DE MATERIALES PENDIENTES');
       addSpacer();
@@ -627,7 +658,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       }
     }
 
-    // PIE DE PAGINA
     const totalPages = (doc.internal as any).getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
@@ -651,7 +681,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   get tareasNormales(): Task[] {
-    console.log('displayedTasks:', this.displayedTasks.length, 'tasks:', this.tasks.length);
     return this.displayedTasks.filter(t => !t.cliente?.includes('Pedido'));
   }
 

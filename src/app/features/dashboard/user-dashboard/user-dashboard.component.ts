@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { TasksService } from '../../../core/services/tasks.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AttendanceService } from '../../../core/services/attendance.service';
-import { Task } from '../../../core/models/task.model';
+import { Task, createEmptyTask, isTaskOverdue, getPriorityText, getPriorityClass, getTaskStatusText, getTaskStatusClass, getPaymentStatusText, calculateSaldoRestante } from '../../../core/models/task.model';
 import { User } from '../../../core/models/user.model';
 import { Attendance } from '../../../core/models/attendance.model';
 import { Subscription } from 'rxjs';
@@ -58,13 +58,14 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
             materiales: task.materiales || [],
             equiposNumeroDeSerie: task.equiposNumeroDeSerie || [],
             asignadoA: Array.isArray(task.asignadoA) ? task.asignadoA : [task.asignadoA],
-            fechaProgramada: (task.fechaProgramada as any)?.toDate?.() ?? task.fechaProgramada,
-            creadoEn: (task.creadoEn as any)?.toDate?.() ?? task.creadoEn,
+            fechaProgramada: this.normalizeDate(task.fechaProgramada),
+            creadoEn: this.normalizeDate(task.creadoEn),
+            completadoEn: this.normalizeDate(task.completadoEn),
           }));
 
           this.tasks = mapped.filter(task => {
             if (task.estado === 'completada') {
-              const completadaEn = (task.completadoEn as any)?.toDate?.() ?? task.completadoEn;
+              const completadaEn = this.normalizeDate(task.completadoEn);
               if (!completadaEn) return false;
               const unMesAtras = new Date();
               unMesAtras.setMonth(unMesAtras.getMonth() - 1);
@@ -80,6 +81,44 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() { this.sub?.unsubscribe(); }
+
+  // ── Método auxiliar para normalizar fechas ─────────────────
+  private normalizeDate(fecha: any): Date {
+    if (!fecha) return new Date();
+    if (fecha instanceof Date) return fecha;
+    if (typeof fecha === 'string') return new Date(fecha);
+    if (fecha.toDate && typeof fecha.toDate === 'function') return fecha.toDate();
+    return new Date(fecha);
+  }
+
+  // ── Métodos del modelo para usar en el template ────────────
+  getPriorityText(priority: number): string {
+    return getPriorityText(priority as 1|2|3);
+  }
+
+  getPriorityClass(priority: number): string {
+    return getPriorityClass(priority as 1|2|3);
+  }
+
+  getTaskStatusText(status: string): string {
+    return getTaskStatusText(status as any);
+  }
+
+  getTaskStatusClass(status: string): string {
+    return getTaskStatusClass(status as any);
+  }
+
+  getPaymentStatusText(payment: string): string {
+    return getPaymentStatusText(payment as any);
+  }
+
+  isTaskOverdue(task: Task): boolean {
+    return isTaskOverdue(task);
+  }
+
+  calculateSaldoRestante(task: Task): number {
+    return calculateSaldoRestante(task);
+  }
 
   // ── Asistencia ─────────────────────────────────────────────
   async loadAttendance() {
@@ -139,40 +178,47 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   formatTime(date: any): string {
     if (!date) return '--:--';
-    const d = date instanceof Date ? date : new Date(date);
+    const d = this.normalizeDate(date);
     return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
   }
 
-  // ── Pedido de materiales ───────────────────────────────────
+  // ── Pedido de materiales (CORREGIDO usando createEmptyTask) ──
   async enviarPedido() {
     if (!this.pedidoTexto.trim() || this.enviandoPedido) return;
     this.enviandoPedido = true;
     try {
-      const taskData: Omit<Task, 'id'> = {
-        folioId: '',
-        cliente: `📦 Pedido de materiales — ${this.currentUser?.nombre}`,
-        direccion: 'Interno',
+      // Usar createEmptyTask para crear la tarea con valores por defecto
+      const taskData = createEmptyTask({
+        folioId: 'PEDIDO-' + Date.now(),
+        cliente: 'Pedido de Materiales',
+        direccion: '',
         telefono: '',
-        descripcion: this.pedidoTexto.trim(),
-        prioridad: 2,
-        asignadoA: [this.currentUser?.uid || ''],
-        asignadoNombre: [this.currentUser?.nombre || ''],
+        descripcion: this.pedidoTexto,
+        prioridad: 1,
+        asignadoA: this.currentUser?.uid ? [this.currentUser.uid] : [],
+        asignadoNombre: this.currentUser?.nombre ? [this.currentUser.nombre] : [],
         estado: 'pendiente',
         pago: 'no_pagado',
         monto: 0,
         fechaProgramada: new Date(),
+        horaProgramada: '09:00',
+        duracionEstimada: 0,
         materiales: [],
-        equiposNumeroDeSerie: [],
-        tiempoTotal: 0,
-        notas: `Pedido generado automáticamente por ${this.currentUser?.nombre}`,
+        notas: this.pedidoTexto,
+        herramientasEspeciales: [],
+        equipos: [],
         creadoPor: this.currentUser?.uid || '',
-        creadoEn: new Date()
-      };
+        equiposNumeroDeSerie: [],
+        tiempoTotal: 0
+      });
+
       await this.tasksService.createTask(taskData);
       this.pedidoTexto = '';
       this.showPedidoModal = false;
+      alert('Pedido enviado correctamente');
     } catch (e) {
       console.error('Error al enviar pedido:', e);
+      alert('Error al enviar el pedido');
     }
     this.enviandoPedido = false;
     this.cdr.detectChanges();
@@ -186,7 +232,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     tomorrow.setDate(tomorrow.getDate() + 1);
     return this.tasks.filter(t => {
       if (t.estado === 'completada') return false;
-      const fecha = new Date(t.fechaProgramada);
+      const fecha = this.normalizeDate(t.fechaProgramada);
       fecha.setHours(0, 0, 0, 0);
       return fecha >= today && fecha < tomorrow;
     });
@@ -197,7 +243,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     today.setHours(0, 0, 0, 0);
     return this.tasks.filter(t => {
       if (t.estado === 'completada') return false;
-      const fecha = new Date(t.fechaProgramada);
+      const fecha = this.normalizeDate(t.fechaProgramada);
       fecha.setHours(0, 0, 0, 0);
       return fecha < today;
     });
@@ -218,7 +264,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     tomorrow.setDate(tomorrow.getDate() + 1);
     return this.tasks.filter(t => {
       if (t.estado === 'completada') return false;
-      const fecha = new Date(t.fechaProgramada);
+      const fecha = this.normalizeDate(t.fechaProgramada);
       fecha.setHours(0, 0, 0, 0);
       return fecha >= today && fecha < tomorrow;
     }).filter(t =>
@@ -279,9 +325,9 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     tomorrow.setDate(tomorrow.getDate() + 1);
     return this.completedTasks
       .filter(t => {
-        const completadaEn = (t.completadoEn as any)?.toDate?.() ?? t.completadoEn;
+        const completadaEn = this.normalizeDate(t.completadoEn);
         if (!completadaEn) return false;
-        const fecha = new Date(completadaEn);
+        const fecha = this.normalizeDate(completadaEn);
         return fecha >= today && fecha < tomorrow;
       })
       .reduce((a, t) => a + (t.tiempoTotal || 0), 0);
@@ -317,21 +363,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   }
 
   getStatusLabel(estado: string): string {
-    const labels: Record<string, string> = {
-      'pendiente': 'Pendiente',
-      'en_progreso': 'En progreso',
-      'completada': 'Completada'
-    };
-    return labels[estado] ?? estado;
+    return this.getTaskStatusText(estado);
   }
 
   getPaymentLabel(pago: string): string {
-    const labels: Record<string, string> = {
-      'pagado': 'Pagado',
-      'no_pagado': 'No pagado',
-      'abono': 'Abono'
-    };
-    return labels[pago] ?? pago;
+    return this.getPaymentStatusText(pago);
   }
 
   getPaymentClass(pago: string) {

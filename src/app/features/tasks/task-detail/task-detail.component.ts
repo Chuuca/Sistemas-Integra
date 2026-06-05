@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TasksService } from '../../../core/services/tasks.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AttendanceService } from '../../../core/services/attendance.service';
-import { Task } from '../../../core/models/task.model';
+import { Task, getTaskStatusText, getPaymentStatusText, getPriorityText, getPriorityClass, calculateSaldoRestante } from '../../../core/models/task.model';
 import { User } from '../../../core/models/user.model';
 
 @Component({
@@ -42,21 +42,20 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
   montoAbonado = 0;
   montoPedidoGuardado = false;
 
-  // Asignación de técnico
   tecnicosDisponibles: { uid: string; nombre: string; rol: string }[] = [];
-  tecnicosSeleccionados: string[] = [];   // UIDs seleccionados
+  tecnicosSeleccionados: string[] = [];
   guardandoTecnicos = false;
   tecnicosGuardados = false;
   mostrarAsignacion = false;
 
-  // Cronómetro persistente
   tiempoActual: number = 0;
   cronometroInterval: any;
   tareaEnProgreso: boolean = false;
   actualizandoCronometro: boolean = false;
 
   get montoPendiente(): number {
-    return (this.task?.monto || 0) - (this.task?.montoAbonado || 0);
+    if (!this.task) return 0;
+    return calculateSaldoRestante(this.task);
   }
 
   get asignadosNombres(): string {
@@ -91,20 +90,21 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
           this.task = {
             ...t,
             materiales: t.materiales || [],
-            equiposNumeroDeSerie: t.equiposNumeroDeSerie || [],
             herramientasEspeciales: t.herramientasEspeciales || [],
             equipos: t.equipos || [],
+            equiposNumeroDeSerie: t.equiposNumeroDeSerie || [],
             anticipoRecibido: t.anticipoRecibido || 0,
             saldoRestante: t.saldoRestante || 0,
             planCobro: t.planCobro || 'al_finalizar',
-            fechaProgramada: (t.fechaProgramada as any)?.toDate?.() ?? t.fechaProgramada,
-            creadoEn: (t.creadoEn as any)?.toDate?.() ?? t.creadoEn,
+            fechaProgramada: this.normalizeDate(t.fechaProgramada),
+            creadoEn: this.normalizeDate(t.creadoEn),
+            completadoEn: this.normalizeDate(t.completadoEn),
           };
           this.montoAbonado = this.task.montoAbonado || 0;
           this.timerSeconds = (this.task.tiempoTotal || 0) * 60;
+          this.tareaEnProgreso = this.task.estado === 'en_progreso';
           
           this.updateDisplay();
-
           this.tecnicosSeleccionados = [...(this.task.asignadoA || [])];
 
           if (this.task.estado === 'en_progreso') {
@@ -121,7 +121,6 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
       this.loading = false;
     }
 
-    // Iniciar actualización del cronómetro persistente
     this.iniciarActualizacionCronometro();
   }
 
@@ -130,7 +129,39 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     if (this.cronometroInterval) clearInterval(this.cronometroInterval);
   }
 
-  // ── Cronómetro persistente (Check-in/Check-out) ────────────────────────────
+  private normalizeDate(fecha: any): Date {
+    if (!fecha) return new Date();
+    if (fecha instanceof Date) return fecha;
+    if (typeof fecha === 'string') return new Date(fecha);
+    if (fecha.toDate && typeof fecha.toDate === 'function') return fecha.toDate();
+    if (fecha.seconds) return new Date(fecha.seconds * 1000);
+    return new Date(fecha);
+  }
+
+  getFechaAsDate(fecha: any): Date | null {
+    if (!fecha) return null;
+    if (fecha instanceof Date) return fecha;
+    if (typeof fecha === 'string') return new Date(fecha);
+    if (fecha.toDate && typeof fecha.toDate === 'function') return fecha.toDate();
+    if (fecha.seconds) return new Date(fecha.seconds * 1000);
+    return null;
+  }
+
+  getTaskStatusText(status: string): string {
+    return getTaskStatusText(status as any);
+  }
+
+  getPaymentStatusText(payment: string): string {
+    return getPaymentStatusText(payment as any);
+  }
+
+  getPriorityText(priority: number): string {
+    return getPriorityText(priority as 1|2|3);
+  }
+
+  getPriorityClass(priority: number): string {
+    return getPriorityClass(priority as 1|2|3);
+  }
 
   iniciarActualizacionCronometro() {
     this.cronometroInterval = setInterval(async () => {
@@ -139,7 +170,7 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
         try {
           const tiempo = await this.tasksService.getTiempoActual(this.task.id);
           this.tiempoActual = tiempo;
-          this.tareaEnProgreso = this.task.tiempoInicio !== null;
+          this.tareaEnProgreso = this.task.estado === 'en_progreso';
           this.cdr.detectChanges();
         } catch (e) {
           console.error('Error obteniendo tiempo:', e);
@@ -150,30 +181,47 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
   }
 
   async toggleCronometroPersistente() {
-    if (!this.task?.id) return;
-    
-    if (this.tareaEnProgreso) {
-      // Pausar tarea
-      await this.tasksService.marcarPausaTarea(this.task.id);
-      this.task.tiempoInicio = null;
-      this.task.estado = 'pendiente';
-      await this.updateStatus('pendiente');
-      await this.setEstadoTecnico('disponible');
-    } else {
-      // Iniciar tarea
-      await this.tasksService.marcarInicioTarea(this.task.id);
-      this.task.tiempoInicio = new Date();
-      this.task.estado = 'en_progreso';
-      await this.updateStatus('en_progreso');
-      await this.setEstadoTecnico('en_sitio');
+    if (!this.task?.id) {
+      console.error('No hay tarea seleccionada');
+      return;
     }
     
-    // Recargar tarea actualizada
+    if (!this.currentUser) {
+      alert('Debes estar autenticado para usar el cronómetro');
+      return;
+    }
+    
+    if (this.tareaEnProgreso) {
+      console.log('Pausando tarea...');
+      try {
+        await this.tasksService.marcarPausaTarea(this.task.id);
+        this.task.estado = 'pendiente';
+        await this.updateStatus('pendiente');
+        await this.setEstadoTecnico('disponible');
+        console.log('Tarea pausada correctamente');
+      } catch (error) {
+        console.error('Error al pausar tarea:', error);
+        alert('Error al pausar la tarea');
+      }
+    } else {
+      console.log('Iniciando tarea...');
+      try {
+        await this.tasksService.marcarInicioTarea(this.task.id);
+        this.task.estado = 'en_progreso';
+        await this.updateStatus('en_progreso');
+        await this.setEstadoTecnico('en_sitio');
+        console.log('Tarea iniciada correctamente');
+      } catch (error) {
+        console.error('Error al iniciar tarea:', error);
+        alert('Error al iniciar la tarea');
+      }
+    }
+    
     const tareaActualizada = await this.tasksService.getTask(this.task.id);
     if (tareaActualizada) {
       this.task = tareaActualizada;
     }
-    this.tareaEnProgreso = this.task.tiempoInicio !== null;
+    this.tareaEnProgreso = this.task.estado === 'en_progreso';
     this.cdr.detectChanges();
   }
 
@@ -183,8 +231,6 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     const segs = Math.floor(segundos % 60);
     return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
   }
-
-  // ── Asignación de técnicos ──────────────────────────────────────────────────
 
   toggleTecnico(uid: string) {
     const idx = this.tecnicosSeleccionados.indexOf(uid);
@@ -221,8 +267,6 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     this.guardandoTecnicos = false;
     this.cdr.detectChanges();
   }
-
-  // ── Cronómetro original (legacy) ─────────────────────────────────────────────
 
   async startTimer() {
     if (this.timerRunning || !this.task?.id || !this.currentUser) return;
@@ -295,8 +339,6 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     this.timerDisplay = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
 
-  // ── Estado y pagos ─────────────────────────────────────────────────────────
-
   async updateStatus(estado: any) {
     if (this.task?.id) {
       const data: any = { estado };
@@ -306,7 +348,7 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
       }
       await this.tasksService.updateTask(this.task.id, data);
       this.task.estado = estado;
-      if (data.completadoEn) (this.task as any).completadoEn = data.completadoEn;
+      if (data.completadoEn) this.task.completadoEn = data.completadoEn;
       this.cdr.detectChanges();
     }
   }
@@ -330,7 +372,7 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
 
   async updateCobranza() {
     if (!this.task?.id) return;
-    const saldo = (this.task.monto || 0) - (this.task.anticipoRecibido || 0);
+    const saldo = calculateSaldoRestante(this.task);
     await this.tasksService.updateTask(this.task.id, {
       anticipoRecibido: this.task.anticipoRecibido,
       saldoRestante: saldo,
@@ -363,8 +405,6 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
       console.error('Error eliminando pedido:', e);
     }
   }
-
-  // ── Herramientas y equipos ─────────────────────────────────────────────────
 
   async addHerramienta() {
     const v = this.newHerramienta?.trim();
@@ -422,19 +462,12 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
   goBack() { history.back(); }
   stars(n: number) { return Array(n).fill(0); }
   emptyStars(n: number) { return Array(3 - n).fill(0); }
 
   getStatusLabel(estado: string): string {
-    const labels: Record<string, string> = {
-      'pendiente': 'Pendiente',
-      'en_progreso': 'En progreso',
-      'completada': 'Completada'
-    };
-    return labels[estado] ?? estado;
+    return this.getTaskStatusText(estado);
   }
 
   getPaymentClass(pago: string) {
@@ -442,12 +475,7 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
   }
 
   getPaymentLabel(pago: string): string {
-    const labels: Record<string, string> = {
-      'pagado': 'Pagado',
-      'no_pagado': 'No pagado',
-      'abono': 'Abono'
-    };
-    return labels[pago] ?? pago;
+    return this.getPaymentStatusText(pago);
   }
 
   formatHora(hora: string): string {

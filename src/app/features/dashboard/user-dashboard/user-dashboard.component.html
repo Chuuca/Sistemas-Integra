@@ -132,8 +132,8 @@
               <p class="address">📍 {{ task.direccion }}</p>
               <p class="desc">{{ task.descripcion || 'Sin descripción.' }}</p>
               <div class="task-footer">
-                <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
-                <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+                <span class="badge badge-{{task.estado}}">{{ getTaskStatusText(task.estado) }}</span>
+                <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentStatusText(task.pago) }}</span>
                 @if (task.fechaProgramada) {
                   <span class="scheduled">📅 {{ task.fechaProgramada | date:"dd/MM/yyyy" }}</span>
                 }
@@ -190,8 +190,8 @@
                 <p class="address">📍 {{ task.direccion }}</p>
                 <p class="desc">{{ task.descripcion || 'Sin descripción.' }}</p>
                 <div class="task-footer">
-                  <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
-                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+                  <span class="badge badge-{{task.estado}}">{{ getTaskStatusText(task.estado) }}</span>
+                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentStatusText(task.pago) }}</span>
                   @if (task.duracionEstimada) {
                     <span class="scheduled">⏳ {{ task.duracionEstimada }}min</span>
                   }
@@ -230,8 +230,8 @@
                 <p class="address">📍 {{ task.direccion }}</p>
                 <p class="desc">{{ task.descripcion || 'Sin descripción.' }}</p>
                 <div class="task-footer">
-                  <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
-                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+                  <span class="badge badge-{{task.estado}}">{{ getTaskStatusText(task.estado) }}</span>
+                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentStatusText(task.pago) }}</span>
                   @if (task.fechaProgramada) {
                     <span class="scheduled">📅 {{ task.fechaProgramada | date:"dd/MM/yyyy" }}</span>
                   }
@@ -261,8 +261,8 @@
                 <p class="address">📍 {{ task.direccion }}</p>
                 <p class="desc">{{ task.descripcion || 'Sin descripción.' }}</p>
                 <div class="task-footer">
-                  <span class="badge badge-completada">Completada</span>
-                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+                  <span class="badge badge-completada">{{ getTaskStatusText(task.estado) }}</span>
+                  <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentStatusText(task.pago) }}</span>
                   @if (task.tiempoTotal) {
                     <span class="scheduled">⏱ {{ task.tiempoTotal }}min</span>
                   }
@@ -337,21 +337,21 @@
                   </ul>
                 </div>
               }
-              @if (tarea.herramientasEspeciales?.length) {
+              @if (tarea.herramientasEspeciales.length) {
                 <div class="revision-section">
-                  <p class="revision-section-title">🛠️ Herramientas especiales</p>
+                  <p class="revision-section-title"> Herramientas especiales</p>
                   <ul>
-                    @for (h of tarea.herramientasEspeciales!; track $index) {
+                    @for (h of tarea.herramientasEspeciales; track $index) {
                       <li>{{ h }}</li>
                     }
                   </ul>
                 </div>
               }
-              @if (tarea.equipos?.length) {
+              @if (tarea.equipos.length) {
                 <div class="revision-section">
-                  <p class="revision-section-title">📦 Equipos</p>
+                  <p class="revision-section-title"> Equipos</p>
                   <ul>
-                    @for (e of tarea.equipos!; track $index) {
+                    @for (e of tarea.equipos; track $index) {
                       <li>{{ e }}</li>
                     }
                   </ul>
@@ -361,13 +361,13 @@
           }
         } @else {
           <div class="revision-empty">
-            <p>🎒 No hay materiales, herramientas ni equipos registrados para las tareas de hoy.</p>
+            <p> No hay materiales, herramientas ni equipos registrados para las tareas de hoy.</p>
           </div>
         }
       </div>
       <div class="modal-revision-footer">
         <button class="btn-primary" (click)="showRevisionModal = false">
-          ✅ Listo, salir a campo
+           Listo, salir a campo
         </button>
       </div>
     </div>
@@ -379,7 +379,7 @@
   <div class="modal-overlay" (click)="showPedidoModal = false">
     <div class="modal-revision" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>📦 Pedido de materiales y consumibles</h2>
+        <h2> Pedido de materiales y consumibles</h2>
         <button (click)="showPedidoModal = false">✕</button>
       </div>
       <div class="modal-revision-body">
@@ -401,7 +401,7 @@
         <button class="btn-primary" style="flex:2"
                 (click)="enviarPedido()"
                 [disabled]="!pedidoTexto.trim() || enviandoPedido">
-          {{ enviandoPedido ? 'Enviando...' : '📤 Enviar pedido a compras' }}
+          {{ enviandoPedido ? 'Enviando...' : ' Enviar pedido a compras' }}
         </button>
       </div>
     </div>
@@ -413,11 +413,11 @@
   <div class="modal-overlay">
     <div class="modal-revision" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>📊 Enviar reporte del día</h2>
+        <h2> Enviar reporte del día</h2>
       </div>
       <div class="modal-revision-body">
         <p style="margin-bottom:16px; color:#555;">
-          ¡Jornada registrada! ¿Deseas enviar el resumen del día a tu correo?
+          ¡Jornada registrada! 
         </p>
         <div style="background:#f8f8f8; border-radius:8px; padding:12px; margin-bottom:8px;">
           <p><strong>Tareas completadas hoy:</strong> {{ completedTasks.length }}</p>
@@ -428,9 +428,7 @@
         <button class="btn-secondary" style="flex:1" (click)="showReporteModal = false">
           Cerrar
         </button>
-        <button class="btn-primary" style="flex:2" (click)="enviarReporteEmail(); showReporteModal = false">
-          📧 Enviar reporte al correo
-        </button>
+      
       </div>
     </div>
   </div>

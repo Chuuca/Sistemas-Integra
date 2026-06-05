@@ -126,7 +126,7 @@
               <span class="folio pedido-folio">📦 Pedido de materiales</span>
               <span class="pedido-date">{{ task.creadoEn | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
-            <h3>{{ task.asignadoNombre?.[0] || 'Técnico' }}</h3>
+          <h3>{{ task.asignadoNombre[0] || 'Técnico' }}</h3>
             <p class="desc">{{ task.descripcion }}</p>
             <div class="task-footer">
               <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
