@@ -360,6 +360,19 @@
   gap: 12px;
   flex-wrap: wrap;
 }
+.btn-whatsapp-evidencia {
+  background: #25D366;
+  color: #fff;
+  padding: 14px 30px;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(37,211,102,.4);
+  transition: all .2s;
+  &:hover { background: #1ebe5d; }
+}
+
 .credenciales-block {
   border: 1.5px solid #1A56DB;
   border-radius: var(--si-radius);
@@ -379,7 +392,7 @@
   cursor: pointer;
   margin-top: 12px;
   transition: all .2s;
-  &:hover { background: #1E3A6E; }
+  &:hover { background: #2A7EA8; }
   &:disabled { opacity: .6; cursor: not-allowed; }
 }
 

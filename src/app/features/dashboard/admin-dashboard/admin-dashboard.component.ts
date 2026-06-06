@@ -94,8 +94,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    this.usersSub = this.usersService.getTechnicians().subscribe(u => {
-      this.users = u;
+    this.usersSub = this.usersService.getAllUsers().subscribe(u => {
+      this.users = u.filter(user => user.nombre && user.email);
       this.cdr.detectChanges();
     });
 
@@ -264,7 +264,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   getTecnicoNames(uids: string | string[]): string {
     const arr = Array.isArray(uids) ? uids : [uids];
-    return arr.map(uid => this.users.find(u => u.uid === uid)?.nombre ?? uid).join(', ');
+    return arr.map(val => {
+      const byUid = this.users.find(u => u.uid === val);
+      if (byUid) return byUid.nombre;
+      const byNombre = this.users.find(u => u.nombre === val);
+      if (byNombre) return byNombre.nombre;
+      // Si parece un UID (sin espacios y largo), busca en users o muestra vacío
+      if (val && val.length > 20 && !val.includes(' ')) return '';
+      return val;
+    }).filter(Boolean).join(', ');
   }
 
   // ── Guardar tarea usando createEmptyTask ──────────────────────────
@@ -387,6 +395,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   async generarReportePDF() {
+    if (this.generandoReporte) return;
     this.generandoReporte = true;
 
     const logoBase64 = await this.cargarLogoBase64();
@@ -670,9 +679,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       doc.text(`Pagina ${i} de ${totalPages}  |  Generado: ${new Date().toLocaleString('es-MX')}`, pageWidth - margin, 293, { align: 'right' });
     }
 
-    doc.save(`Reporte_${new Date().toLocaleDateString('en-CA')}.pdf`);
-    this.generandoReporte = false;
-    this.cdr.detectChanges();
+    try {
+      doc.save(`Reporte_${new Date().toLocaleDateString('en-CA')}.pdf`);
+    } finally {
+      this.generandoReporte = false;
+      this.cdr.detectChanges();
+    }
   }
 
   // ── separacion por tareas y pedidos ────────────────────────────────────────────────
@@ -682,6 +694,52 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   get tareasNormales(): Task[] {
     return this.displayedTasks.filter(t => !t.cliente?.includes('Pedido'));
+  }
+
+  get tareasNormalesPorTecnico(): { uid: string; nombre: string; tareas: Task[] }[] {
+    const normales = this.tareasNormales;
+    const map = new Map<string, { uid: string; nombre: string; tareas: Task[] }>();
+
+    // Inicializar un grupo por cada usuario registrado
+    for (const user of this.users) {
+      if (user.nombre && user.email) {
+        map.set(user.uid, { uid: user.uid, nombre: user.nombre, tareas: [] });
+      }
+    }
+
+    // Asignar tareas a sus grupos
+    for (const task of normales) {
+      const uids: string[] = Array.isArray(task.asignadoA) ? task.asignadoA : [task.asignadoA as any];
+      const nombres: string[] = Array.isArray(task.asignadoNombre) ? task.asignadoNombre : [task.asignadoNombre as any];
+
+      if (uids.length === 0 || !uids[0]) {
+        if (!map.has('sin_asignar')) {
+          map.set('sin_asignar', { uid: 'sin_asignar', nombre: 'Sin asignar', tareas: [] });
+        }
+        map.get('sin_asignar')!.tareas.push(task);
+      } else {
+        for (let i = 0; i < uids.length; i++) {
+          const uid = uids[i];
+          const rawNombre = nombres[i] || uid;
+          const nombre = (rawNombre.length > 20 && !rawNombre.includes(' '))
+            ? (this.users.find(u => u.uid === rawNombre)?.nombre || this.users.find(u => u.uid === uid)?.nombre || rawNombre)
+            : rawNombre;
+          if (!map.has(uid)) {
+            map.set(uid, { uid, nombre, tareas: [] });
+          }
+          map.get(uid)!.tareas.push(task);
+        }
+      }
+    }
+
+    // Sin asignar al final
+    const sinAsignar = map.get('sin_asignar');
+    if (sinAsignar) {
+      map.delete('sin_asignar');
+      map.set('sin_asignar', sinAsignar);
+    }
+
+    return Array.from(map.values());
   }
 
   stars(n: number) { return Array(n).fill(0); }

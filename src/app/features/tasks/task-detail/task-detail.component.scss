@@ -487,6 +487,21 @@
   &:disabled { opacity: .6; cursor: not-allowed; }
 }
 
+.btn-completar {
+  background: #10B981;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: all .2s;
+  box-shadow: 0 4px 14px rgba(16,185,129,.4);
+  &:hover { background: #059669; }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
 .timer-done {
   text-align: center;
   font-size: 13px;

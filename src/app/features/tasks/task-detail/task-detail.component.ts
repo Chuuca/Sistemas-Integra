@@ -462,7 +462,29 @@ export class TaskDetailComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  async completarTarea() {
+    if (!this.task?.id) return;
+    try {
+      await this.tasksService.marcarPausaTarea(this.task.id);
+      const mins = Math.round(this.tiempoActual / 60);
+      await this.tasksService.updateTask(this.task.id, {
+        estado: 'completada',
+        completadoEn: new Date(),
+        tiempoTotal: mins
+      });
+      await this.setEstadoTecnico('disponible');
+      this.router.navigate([this.isAdmin ? '/admin' : '/dashboard']);
+    } catch (error) {
+      console.error('Error al completar tarea:', error);
+      alert('Error al completar la tarea');
+    }
+  }
+
   goBack() { history.back(); }
+
+  goHome() {
+    this.router.navigate([this.isAdmin ? '/admin' : '/dashboard']);
+  }
   stars(n: number) { return Array(n).fill(0); }
   emptyStars(n: number) { return Array(3 - n).fill(0); }
 

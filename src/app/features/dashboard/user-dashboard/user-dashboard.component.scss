@@ -533,6 +533,16 @@
   font-weight: 500;
 }
 
+.btn-whatsapp {
+  background: #25D366;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: var(--si-radius);
+  font-size: 14px;
+  font-weight: 500;
+  &:hover { background: #1ebe5d; }
+}
+
 .pedido-desc {
   font-size: 13px;
   color: var(--si-text-sub);

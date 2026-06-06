@@ -163,7 +163,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   }
 
   abrirWhatsApp() {
-    window.open('https://wa.me/', '_blank');
+    window.open('https://wa.me/523957884751', '_blank');
   }
 
   get estadoLabel(): string {
@@ -314,28 +314,44 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Getters de tiempo ──────────────────────────────────────
-  get tiempoEstimadoHoy(): number {
-    return this.pendingTasks.reduce((a, t) => a + (t.duracionEstimada || 0), 0);
-  }
-
-  get tiempoCompletadoHoy(): number {
+  get tareasHoy(): Task[] {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return this.completedTasks
-      .filter(t => {
-        const completadaEn = this.normalizeDate(t.completadoEn);
-        if (!completadaEn) return false;
-        const fecha = this.normalizeDate(completadaEn);
-        return fecha >= today && fecha < tomorrow;
-      })
+    return this.tasks.filter(t => {
+      const fecha = this.normalizeDate(t.fechaProgramada);
+      fecha.setHours(0, 0, 0, 0);
+      return fecha >= today && fecha < tomorrow;
+    });
+  }
+
+  get tiempoEstimadoHoy(): number {
+    return this.tareasHoy.reduce((a, t) => a + (t.duracionEstimada || 0), 0);
+  }
+
+  get tiempoCompletadoHoy(): number {
+    return this.tareasHoy
+      .filter(t => t.estado === 'completada')
       .reduce((a, t) => a + (t.tiempoTotal || 0), 0);
   }
 
   get tiempoRestanteHoy(): number {
     const restante = this.tiempoEstimadoHoy - this.tiempoCompletadoHoy;
     return restante > 0 ? restante : 0;
+  }
+
+  get progresoHoy(): number {
+    if (this.tiempoEstimadoHoy === 0) return 0;
+    return Math.min(100, Math.round((this.tiempoCompletadoHoy / this.tiempoEstimadoHoy) * 100));
+  }
+
+  get completadasHoy(): number {
+    return this.tareasHoy.filter(t => t.estado === 'completada').length;
+  }
+
+  get pendientesHoy(): number {
+    return this.tareasHoy.filter(t => t.estado !== 'completada').length;
   }
 
   // ── Getters de métricas ────────────────────────────────────

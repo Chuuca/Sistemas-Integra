@@ -4,8 +4,8 @@
     <div class="nav-left">
       <button class="back-btn" (click)="goBack()">← Volver</button>
       <svg width="28" height="28" viewBox="0 0 48 48">
-        <circle cx="24" cy="24" r="22" fill="#1DA5A0"/>
-        <circle cx="24" cy="24" r="12" fill="#1E3A6E"/>
+        <circle cx="24" cy="24" r="22" fill="#5BB8D4"/>
+        <circle cx="24" cy="24" r="12" fill="#2A7EA8"/>
         <circle cx="24" cy="24" r="5" fill="#111"/>
         <circle cx="20" cy="20" r="3" fill="white" opacity="0.6"/>
       </svg>
@@ -43,23 +43,25 @@
 
     <div class="users-list">
       @for (user of users; track user.uid) {
-        <div class="user-card">
-          <div class="user-avatar">
-            {{ user.nombre.charAt(0).toUpperCase() }}
+        @if (user.nombre || user.email) {
+          <div class="user-card">
+            <div class="user-avatar">
+              {{ (user.nombre || user.email || '?').charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-info">
+              <h3>{{ user.nombre || '(Sin nombre)' }}</h3>
+              <p>{{ user.email || '(Sin correo)' }}</p>
+            </div>
+            <div class="user-meta">
+              <span class="rol-badge" [class]="getRolClass(user.rol)">
+                {{ user.rol === 'admin' ? '🔑 Admin' : '🔧 Técnico' }}
+              </span>
+              @if (user.createdAt) {
+                <span class="user-date">Desde {{ user.createdAt | date:'dd/MM/yyyy' }}</span>
+              }
+            </div>
           </div>
-          <div class="user-info">
-            <h3>{{ user.nombre }}</h3>
-            <p>{{ user.email }}</p>
-          </div>
-          <div class="user-meta">
-            <span class="rol-badge" [class]="getRolClass(user.rol)">
-              {{ user.rol === 'admin' ? '🔑 Admin' : '🔧 Técnico' }}
-            </span>
-            <span class="user-date">
-              Desde {{ user.createdAt | date:'dd/MM/yyyy' }}
-            </span>
-          </div>
-        </div>
+        }
       }
 
       @if (users.length === 0) {

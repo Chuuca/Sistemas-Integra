@@ -364,7 +364,12 @@ export class WorkOrderComponent implements OnInit {
 
   abrirWhatsapp() {
     const msg = `Folio: ${this.task?.folioId || ''} | Cliente: ${this.task?.cliente || ''}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    window.open(`https://wa.me/523957884751?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  mandarEvidencias() {
+    const msg = `Evidencias - Folio: ${this.task?.folioId || ''} | Cliente: ${this.task?.cliente || ''} | Dirección: ${this.task?.direccion || ''}`;
+    window.open(`https://wa.me/523957884751?text=${encodeURIComponent(msg)}`, '_blank');
   }
 
   async enviarCotizacion() {
