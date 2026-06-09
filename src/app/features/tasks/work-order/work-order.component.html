@@ -1,0 +1,1616 @@
+@if (loading) {
+  <div class="loading"><p>Cargando...</p></div>
+} @else if (task) {
+  <div class="wo-layout">
+
+    <!-- ══ NAVBAR STICKY ══ -->
+    <nav class="navbar">
+      <div class="nav-left">
+        <button class="back-btn" (click)="goBack()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Volver
+        </button>
+        <div class="nav-sep"></div>
+        <img src="/isotipo-si.png" alt="SI" class="nav-isotipo"/>
+        <div class="nav-titles">
+          <span class="nav-title">Hoja de Trabajo</span>
+          <span class="nav-tipo">
+            @if (tipoSeleccionado) {
+              {{ tipos[tipos.findIndex(t => t.value === tipoSeleccionado)]?.label || 'Selecciona tipo' }}
+            } @else {
+              {{ task.cliente }}
+            }
+          </span>
+        </div>
+      </div>
+      <div class="nav-right">
+        <span class="folio-badge">{{ task.folioId }}</span>
+      </div>
+    </nav>
+
+    <!-- ══ BARRA DE CLIENTE ══ -->
+    <div class="wo-client-bar">
+      <span class="client-name">{{ task.cliente }}</span>
+      @if (task.direccion) {
+        <span class="client-dot">·</span>
+        <span class="client-meta">{{ task.direccion }}</span>
+      }
+      <span class="client-dot">·</span>
+      <span class="client-meta">{{ fechaTarea }}</span>
+    </div>
+
+    <div class="wo-content">
+
+      <!-- ══ ENVÍO DE CREDENCIALES — siempre al inicio ══ -->
+      <div class="wo-block credenciales-block">
+        <h3 class="wo-block-title">Envio de credenciales al cliente</h3>
+        <p class="wo-sub">Completa los datos y envia las credenciales por correo al cliente</p>
+
+        <div class="wo-field">
+          <label>Correo del cliente</label>
+          <input [(ngModel)]="credenciales.correoCliente" type="email" placeholder="cliente@correo.com"/>
+        </div>
+
+        <div class="wo-field">
+          <label>Sistema instalado</label>
+          <input [(ngModel)]="credenciales.sistema" placeholder="Ej. Soft Restaurant, CCTV Hikvision..."/>
+        </div>
+
+        <div class="wo-field-row">
+          <div class="wo-field">
+            <label>Contraseña</label>
+            <input [(ngModel)]="credenciales.contrasena" placeholder="Contraseña de acceso"/>
+          </div>
+          <div class="wo-field">
+            <label>Clave de cifrado</label>
+            <input [(ngModel)]="credenciales.claveCifrado" placeholder="Clave de cifrado"/>
+          </div>
+        </div>
+
+        <div class="wo-field">
+          <label>Notas adicionales</label>
+          <textarea [(ngModel)]="credenciales.notasAcceso" rows="2" placeholder="Observaciones, instrucciones especiales..."></textarea>
+        </div>
+
+        @if (errorCorreo) {
+          <p class="error-msg">{{ errorCorreo }}</p>
+        }
+        <button class="btn-enviar-credenciales"
+                (click)="enviarCredenciales()"
+                [disabled]="enviandoCorreo">
+          {{ enviandoCorreo ? 'Enviando...' : correoEnviado ? '✓ Enviado correctamente' : '📧 Enviar credenciales por correo' }}
+        </button>
+      </div>
+
+      @if (hojasGuardadas.length > 0) {
+        <div class="hojas-guardadas">
+          <div class="section-divider"><span>Hojas guardadas para esta tarea</span></div>
+          @for (hoja of hojasGuardadas; track hoja.id) {
+            <div class="hoja-guardada-item" (click)="cargarHoja(hoja)">
+              <span class="hoja-tipo">{{ tipos[tipos.findIndex(t => t.value === hoja.tipo)]?.label || hoja.tipo }}</span>
+              <span class="hoja-fecha">{{ hoja.fecha }}</span>
+              <span class="hoja-badge">{{ hoja.completado ? 'Completa' : 'En progreso' }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- SELECCION DE TIPO -->
+      @if (!tipoSeleccionado) {
+        <div class="tipo-selector">
+          @if (hojasGuardadas.length > 0) {
+            <h2>Continuar con hojas guardadas</h2>
+            <p class="tipo-hint">Esta tarea ya tiene hojas guardadas. Puedes continuar con ellas o agregar nuevas.</p>
+          } @else {
+            <h2>Selecciona el tipo de hoja de trabajo</h2>
+            <p class="tipo-hint">Selecciona una o varias hojas para multiservicios</p>
+          }
+          <div class="tipos-grid">
+            @for (tipo of tipos; track tipo.value) {
+              <button class="tipo-btn"
+                      [class.selected]="tiposSeleccionados.includes(tipo.value)"
+                      [class.has-saved]="hojasGuardadas.some(h => h.tipo === tipo.value)"
+                      (click)="toggleTipoMultiple(tipo.value)">
+                <span class="tipo-label-text">{{ tipo.label }}</span>
+                @if (hojasGuardadas.some(h => h.tipo === tipo.value)) {
+                  <span class="tipo-saved-badge">Guardada</span>
+                }
+                @if (tiposSeleccionados.includes(tipo.value)) {
+                  <span class="tipo-check">✓</span>
+                }
+              </button>
+            }
+          </div>
+          @if (tiposSeleccionados.length > 0) {
+            <div class="tipo-confirm">
+              <span class="tipo-count">{{ tiposSeleccionados.length }} hoja(s) seleccionada(s)</span>
+              <button class="btn-confirmar" (click)="confirmarTipos()">
+                @if (tiposSeleccionados.every(t => hojasGuardadas.some(h => h.tipo === t))) {
+                  Abrir hoja guardada →
+                } @else {
+                  Continuar →
+                }
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- NAVEGACION MULTI -->
+      @if (tipoSeleccionado && modoMultiple) {
+        <div class="multi-nav">
+          <button class="btn-nav" (click)="anteriorTipo()" [disabled]="tipoIndex === 0">← Anterior</button>
+          <span class="multi-progress">Hoja {{ tipoIndex + 1 }} de {{ totalTipos }}</span>
+          <button class="btn-nav" (click)="siguienteTipo()" [disabled]="tipoIndex === totalTipos - 1">Siguiente →</button>
+        </div>
+      }
+    
+      <!-- HOJA CCTV (instalacion / reparacion) -->
+      @if (tipoSeleccionado === 'cctv_instalacion' || tipoSeleccionado === 'cctv_reparacion') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            {{ tipoSeleccionado === 'cctv_instalacion' ? 'CCTV Instalacion' : 'CCTV Reparacion' }}
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+
+          <div class="wo-block">
+            <h3 class="wo-block-title">Bloque Interno</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.limpiezaAreas"/> Limpieza de areas en donde se trabajo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.trayectosFijados"/> Todos los trayectos y canalizaciones quedaron correctamente fijados y asegurados</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.zonaGrabadorOrganizada"/> La zona del grabador quedo organizada y los cables peinados</label>
+            </div>
+            <div class="wo-field"><label>Materiales adicionales utilizados</label><textarea [(ngModel)]="cctv.materialesAdicionales" rows="2" placeholder="Materiales adicionales..."></textarea></div>
+
+            <!-- FIRMA DEL TÉCNICO — canvas dibujable -->
+            <div class="wo-field">
+              <label>Firma del técnico a cargo</label>
+              <div class="firma-container firma-tecnico-wrap">
+                <canvas #firmaTecnicoCctv width="600" height="120" class="firma-canvas firma-canvas-tecnico"
+                        (mouseenter)="iniciarFirmaTecnico(firmaTecnicoCctv)"
+                        (touchstart)="iniciarFirmaTecnico(firmaTecnicoCctv)"></canvas>
+                <span class="firma-hint">← Traza tu firma aquí</span>
+              </div>
+              <button class="btn-limpiar-firma" (click)="limpiarFirmaTecnico()">Limpiar firma técnico</button>
+            </div>
+          </div>
+
+          <div class="wo-block">
+            <h3 class="wo-block-title">Bloque de Validacion General</h3>
+            <div class="wo-info-row"><span class="wo-info-label">Folio:</span><span class="wo-info-value">{{ task.folioId }}</span></div>
+            <div class="wo-info-row"><span class="wo-info-label">Fecha:</span><span class="wo-info-value">{{ fechaTarea }}</span></div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Numero de camaras instaladas</label><input type="number" [(ngModel)]="cctv.numeroCamaras" min="0"/></div>
+              <div class="wo-field"><label>Tiempo estimado de grabacion</label><input [(ngModel)]="cctv.tiempoGrabacion" placeholder="Ej. 30 dias"/></div>
+            </div>
+            <div class="wo-field"><label>Capacidad de almacenamiento</label><input [(ngModel)]="cctv.capacidadAlmacenamiento" placeholder="Ej. 1TB"/></div>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.grabacionVerificada"/> Se verifico grabacion correcta en todas las camaras instaladas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.hikConnectOperativo"/> El sistema quedo vinculado y operativo en la plataforma Hik-Connect</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.fechaHoraVerificada"/> Fecha y hora del grabador verificadas correctamente</label>
+            </div>
+            <div class="wo-field"><label>Numero de Serie del grabador/camaras</label><input [(ngModel)]="cctv.numeroSerie" placeholder="N° de serie"/></div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Internet Bajada (Mbps)</label><input [(ngModel)]="cctv.internetBajada" placeholder="Mbps"/></div>
+              <div class="wo-field"><label>Internet Subida (Mbps)</label><input [(ngModel)]="cctv.internetSubida" placeholder="Mbps"/></div>
+            </div>
+            <div class="wo-field"><label>Recomendaciones detectadas</label><textarea [(ngModel)]="cctv.recomendaciones" rows="2" placeholder="Regulador UPS, mejorar plan de internet..."></textarea></div>
+          </div>
+
+          <div class="wo-block">
+            <h3 class="wo-block-title">Bloque Entrega al Cliente</h3>
+            <p class="wo-sub">Validacion tecnica</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.demostracionRealizada"/> Me mostraron la operacion general del sistema instalado y realizaron pruebas funcionales frente a mi</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.canalizacionProfesional"/> La canalizacion, cableado, montaje y limpieza me parecieron ordenados y profesionales</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.areaLimpia"/> El area de trabajo fue entregada limpia y funcional</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.vistaCorrectaCamaras"/> La vista de lo que capturan las camaras me parece correcta</label>
+            </div>
+
+            <p class="wo-sub">Experiencia del cliente</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.explicacionBasica"/> Recibi explicacion basica del funcionamiento del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.sabeContactarSoporte"/> Se como contactar al area de soporte tecnico</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.personalProfesional"/> El personal se presento de manera profesional y resolvio mis dudas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.capacitacionRealizada"/> Entiendo las funciones principales del sistema y se me capacito para utilizarlo</label>
+            </div>
+
+            <p class="wo-sub">Responsabilidad y garantia</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.sabesolicitarSoporte"/> Se como solicitar soporte tecnico en caso de requerir asistencia futura</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.entiendeLimitesGarantia"/> Entiendo que danos por descargas electricas, agua o manipulacion indebida no aplican como garantia</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctv.recomendoContrasenas"/> Se me recomendo actualizar mis contrasenas para mejorar privacidad y seguridad</label>
+            </div>
+
+            <p class="wo-sub">Calificación sobre nuestro servicio (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="cctv.calificacion === n" (click)="cctv.calificacion = n">{{ n }}</button>
+              }
+            </div>
+
+            <p class="wo-sub">¿Nos recomendarías?</p>
+            <div class="nps-btns">
+              <button [class.selected]="cctv.nps === '0-5'" (click)="cctv.nps = '0-5'">Poco probable</button>
+              <button [class.selected]="cctv.nps === '7'" (click)="cctv.nps = '7'">Neutral</button>
+              <button [class.selected]="cctv.nps === '8-9'" (click)="cctv.nps = '8-9'">Probable</button>
+              <button [class.selected]="cctv.nps === '10'" (click)="cctv.nps = '10'">Super recomendado</button>
+            </div>
+
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="cctv.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (cctv.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="cctv.comentarios" rows="2" placeholder="Comentarios adicionales..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL CLIENTE CCTV -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del cliente</h3>
+            <div class="firma-container">
+              <canvas #firmaCCTV width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaCCTV)"
+                      (touchstart)="iniciarFirma(firmaCCTV)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- HOJA ALARMA INSTALACION -->
+      @if (tipoSeleccionado === 'alarma_instalacion') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            Alarma de Intrusos — Instalacion
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validacion de Instalacion Interna</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.limpiezaAreas"/> Limpieza de areas en donde se trabajo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.trayectosFijados"/> Todos los trayectos, canalizaciones y fijaciones quedaron correctamente asegurados</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.gabineteOrganizado"/> El gabinete del sistema quedo organizado y correctamente cerrado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.cableadoIdentificado"/> El cableado quedo correctamente identificado y peinado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.alimentacionVerificada"/> Se verifico alimentacion electrica y respaldo de bateria</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.comunicacionVerificada"/> Se verifico comunicacion entre panel, sensores y dispositivos inalambricos/alambricos</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.pruebasDisparo"/> Se realizaron pruebas de disparo y restauracion en todos los sensores instalados</label>
+            </div>
+            <h4 class="wo-sub">Equipos instalados</h4>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Sensores PIR</label><input type="number" [(ngModel)]="alarma.cantidadPIR" min="0"/></div>
+              <div class="wo-field"><label>Contactos magneticos</label><input type="number" [(ngModel)]="alarma.cantidadContactos" min="0"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Sensores de humo</label><input type="number" [(ngModel)]="alarma.cantidadHumo" min="0"/></div>
+              <div class="wo-field"><label>Botones de panico</label><input type="number" [(ngModel)]="alarma.cantidadPanico" min="0"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Sirenas</label><input type="number" [(ngModel)]="alarma.cantidadSirenas" min="0"/></div>
+              <div class="wo-field"><label>Teclados</label><input type="number" [(ngModel)]="alarma.cantidadTeclados" min="0"/></div>
+            </div>
+            <div class="wo-field"><label>Controles remotos / tags</label><input type="number" [(ngModel)]="alarma.cantidadControles" min="0"/></div>
+            <div class="wo-field"><label>Materiales adicionales utilizados</label><textarea [(ngModel)]="alarma.materialesAdicionales" rows="2" placeholder="Materiales adicionales..."></textarea></div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Firma del tecnico a cargo</label><input [(ngModel)]="alarma.firmaTecnico" placeholder="Nombre del tecnico"/></div>
+              <div class="wo-field"><label>Validacion de ingenieria / supervisor</label><input [(ngModel)]="alarma.firmaSupervisor" placeholder="Nombre del supervisor"/></div>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Bloque de Validacion General</h3>
+            <div class="wo-info-row"><span class="wo-info-label">Folio:</span><span class="wo-info-value">{{ task.folioId }}</span></div>
+            <div class="wo-info-row"><span class="wo-info-label">Fecha:</span><span class="wo-info-value">{{ fechaTarea }}</span></div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Modelo de panel instalado</label><input [(ngModel)]="alarma.modeloPanel" placeholder="Modelo"/></div>
+              <div class="wo-field"><label>Numero de serie del panel</label><input [(ngModel)]="alarma.numeroSerie" placeholder="N° serie"/></div>
+            </div>
+            <h4 class="wo-sub">Validaciones tecnicas</h4>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.sensoresVerificados"/> Se verifico funcionamiento correcto de todos los sensores instalados</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.zonasValidadas"/> Se valido activacion y restauracion de zonas correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.sirenaVerificada"/> Se verifico funcionamiento correcto de sirena interior y/o exterior</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.hikConnectOperativo"/> El sistema quedo vinculado y operativo en la plataforma Hik-Connect</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.alertaHumoVerificada"/> Se verifico alerta de sensor de humo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.notificacionesVerificadas"/> Se verifico recepcion de notificaciones y alertas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.fechaHoraVerificada"/> Fecha y hora del panel verificadas correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.usuariosConfigurados"/> Usuarios, contrasenas y permisos basicos configurados</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.armadoDesarmadoVerificado"/> Se valido correcto armado y desarmado del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.bateriaVerificada"/> Se verifico funcionamiento correcto de bateria de respaldo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.internetVerificado"/> Se verifico conexion estable a internet</label>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Internet Bajada (Mbps)</label><input [(ngModel)]="alarma.internetBajada" placeholder="Mbps"/></div>
+              <div class="wo-field"><label>Internet Subida (Mbps)</label><input [(ngModel)]="alarma.internetSubida" placeholder="Mbps"/></div>
+            </div>
+            <div class="wo-field"><label>Nivel de senal inalambrica</label><input [(ngModel)]="alarma.senalInalambrica" placeholder="Nivel de senal"/></div>
+            <div class="wo-field"><label>Ubicacion del panel principal</label><input [(ngModel)]="alarma.ubicacionPanel" placeholder="Ubicacion"/></div>
+            <div class="wo-field"><label>Recomendaciones detectadas</label><textarea [(ngModel)]="alarma.recomendaciones" rows="2" placeholder="Regulador UPS, mejorar WiFi..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Bloque Entrega al Cliente</h3>
+            <p class="wo-sub">Validacion tecnica</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.demostracionRealizada"/> Me mostraron la operacion general y realizaron pruebas funcionales frente a mi</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.canalizacionProfesional"/> La canalizacion, cableado, montaje y limpieza me parecieron ordenados y profesionales</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.areaLimpia"/> El area de trabajo fue entregada limpia y funcional</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.sensoresVerificadosCliente"/> Verifique junto al tecnico el funcionamiento de sensores, sirenas y controles</label>
+            </div>
+            <p class="wo-sub">Experiencia del cliente</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.explicacionBasica"/> Recibi explicacion basica sobre el funcionamiento del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.sabeContactarSoporte"/> Se como contactar al area de soporte tecnico</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.personalProfesional"/> El personal se presento de manera profesional</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.capacitacionRealizada"/> Entiendo las funciones principales y fui capacitado para utilizarlo correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.sabeArmarDesarmar"/> Se como armar y desarmar correctamente el sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.sabeResponderAlarma"/> Entiendo como responder ante una alarma o notificacion</label>
+            </div>
+            <p class="wo-sub">Responsabilidad y garantia</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.sabesolicitarSoporte"/> Se como solicitar soporte tecnico en caso de requerir asistencia futura</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.entiendeLimitesGarantia"/> Entiendo que danos por descargas electricas, agua o manipulacion indebida no aplican como garantia</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarma.recomendoContrasenas"/> Se me recomendo actualizar mis contrasenas y resguardar mis accesos</label>
+            </div>
+            <p class="wo-sub">Calificación sobre nuestro servicio (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="alarma.calificacion === n" (click)="alarma.calificacion = n">{{ n }}</button>
+              }
+            </div>
+            <p class="wo-sub">¿Nos recomendarías?</p>
+            <div class="nps-btns">
+              <button [class.selected]="alarma.nps === '0-5'" (click)="alarma.nps = '0-5'">Poco probable</button>
+              <button [class.selected]="alarma.nps === '7'" (click)="alarma.nps = '7'">Neutral</button>
+              <button [class.selected]="alarma.nps === '8-9'" (click)="alarma.nps = '8-9'">Probable</button>
+              <button [class.selected]="alarma.nps === '10'" (click)="alarma.nps = '10'">Super recomendado</button>
+            </div>
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="alarma.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (alarma.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="alarma.comentarios" rows="2" placeholder="Comentarios adicionales..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL CLIENTE ALARMA -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del cliente</h3>
+            <div class="firma-container">
+              <canvas #firmaAlarma width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaAlarma)"
+                      (touchstart)="iniciarFirma(firmaAlarma)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- HOJA ALARMA MERCADO SAN JUAN -->
+      @if (tipoSeleccionado === 'alarma_mercado_san_juan') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            Alarma Mercado San Juan
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Tuberia y Cableados</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tuberiaAlarmaIngreso"/> Tuberia desde alarma hasta ingreso</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tuberiaIngresoPanaderia"/> Tuberia ingreso - panaderia</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tuberiaPanelSirenaTecladoSensor"/> Tuberia panel - sirena - teclado - sensor</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tuberiaIngresoSensorJalon"/> Tuberia ingreso - sensor - estacion de jalon</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tuberiaIncendioServicio"/> Tuberia incendio zona servicio</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tuberiaElectricaInternet"/> Tuberia electrica e internet</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.cableadoTotal"/> Cableado total</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.cajasRegistroInstaladas"/> Todas las cajas de registro estan instaladas en espera para recibir equipos</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sinCableadoExpuesto"/> Sin cableado expuesto o conexiones sueltas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tapasRegistros"/> Tapas y registros correctamente colocados</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Panel y Gabinete</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.panelFijadoMuro"/> Panel correctamente fijado a muro, a 2 metros al menos del borde de la camara</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.panelInstalado"/> Panel instalado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.gabineteInterconectado"/> Gabinete lateral correctamente fijado e interconectado mediante tuberia conduit metalica</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.expansorInstalado"/> Expansor inalambrico correctamente instalado y fijado al lado derecho del panel</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.multicontactoInstalado"/> Multicontacto electrico correctamente instalado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.bateriaConectada"/> Bateria instalada y conectada correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.relevadorInstalado"/> Relevador correctamente instalado y fijado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.ordenConexionesInternas"/> Orden adecuado en conexiones internas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tuberiaConduitFirme"/> Tuberia metalica conduit firme y correctamente asegurada</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sinCableadoExpuestoPanel"/> Sin cableado expuesto o conexiones sueltas (panel)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.tapasRegistrosPanel"/> Tapas y registros correctamente colocados (panel)</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Configuracion Estandar</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.ethernetActivo"/> Conexion Ethernet activa y funcional</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.panelHikConnect"/> Panel enlazado correctamente a Hik-Connect</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.nombreSucursalTeclado"/> Nombre de sucursal configurado en teclado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.fechaHoraConfig"/> Fecha y hora configuradas correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.retardoEntradaServicio"/> Retardo de entrada en puerta de servicio (30 segundos)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.retardoSalidaServicio"/> Retardo de salida en puerta de servicio (60 segundos)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.botonesPanico247"/> Botones de panico configurados 24/7 en modo silencioso</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sensorHumoPanaderia247"/> Sensor de humo panaderia configurado 24/7</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Zonas Cableadas</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.z1CortinaPuertaServicio"/> Z1 — Funcionamiento de cortina puerta servicio</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.z3CortinaPrincipal"/> Z3 — Funcionamiento de cortina principal</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.z5SensorHumoPanaderia"/> Z5 — Funcionamiento de sensor humo panaderia</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Sensores PIR Inalambricos</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pir1"/> PIR 1</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pir2"/> PIR 2</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pir3"/> PIR 3</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pir4"/> PIR 4</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pir5"/> PIR 5</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pir6"/> PIR 6</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pir7"/> PIR 7</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pir8"/> PIR 8</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Botones de Panico</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.panicoCaja1"/> Lanzamiento de Panico Caja 1</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.panicoCaja2"/> Lanzamiento de Panico Caja 2</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.panicoCaja3"/> Lanzamiento de Panico Caja 3</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Incendio</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sensorHumoPanaderiaPrueba"/> Sensor humo panaderia (prueba aerosol)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.palancaServicioSirenas"/> Palanca servicio (lanza las 3 sirenas)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.palancaIngresoSirenas"/> Palanca ingreso (lanza las 3 sirenas)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sensoresAutonomosProbados"/> Se probaron los 8 sensores autonomos de humo al instalarse</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Sirenas y Relevador</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sirenaInteriorActiva"/> Activacion correcta de sirena interior</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sirenaExteriorActiva"/> Activacion correcta de sirena exterior</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.estroboExterior"/> Validacion visual de estrobo exterior</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.relevadorActivando"/> Relevador activando correctamente mediante salida de sirena 12V del panel</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Teclado y Operacion</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.armadoCorrecto"/> Armado correcto del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.desarmadoCorrecto"/> Desarmado correcto del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.retardoEntradaFuncionando"/> Retardo de entrada funcionando correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.nombreSucursalVisible"/> Visualizacion correcta de nombre de sucursal</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.fechaHoraCorrectas"/> Fecha y hora correctas</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">App y Conectividad</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.internetValidado"/> Conexion a internet validada</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.panelEnLinea"/> Panel en linea en Hik-Connect</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.appProbada"/> App probada correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.recepcionEventos"/> Recepcion de eventos validada</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.armadoDesarmadoRemoto"/> Armado y desarmado remoto funcional</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Fotos de Evidencia Minima</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.fotoPanelAbierto"/> Panel abierto y gabinete lateral abierto</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.fotoPanelCerrado"/> Panel y gabinete cerrado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.fotoSensoresCortina"/> Foto de cada ingreso con sensor de cortina</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.fotoSirenaExterior"/> Sirena exterior</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.fotoTeclado"/> Teclado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.fotoIngresoGeneral"/> Vista general de ingreso por dentro</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Liberacion Interna</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.instalacionValidadaIngeniero"/> Instalacion validada correctamente por ingeniero</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.pruebasFuncionalesOK"/> Todas las pruebas funcionales realizadas satisfactoriamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sistemaEntregadoOperativo"/> Sistema entregado completamente operativo</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firmas Internas</h3>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Firma tecnico responsable</label><input [(ngModel)]="alarmaMarket.firmaTecnico" placeholder="Nombre del tecnico"/></div>
+              <div class="wo-field"><label>Nombre validacion ingenieria</label><input [(ngModel)]="alarmaMarket.nombreValidacionIngenieria" placeholder="Nombre"/></div>
+            </div>
+            <div class="wo-field"><label>Firma validacion ingenieria</label><input [(ngModel)]="alarmaMarket.firmaValidacionIngenieria" placeholder="Firma"/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Entrega al Cliente</h3>
+            <p class="wo-sub">Validacion tecnica</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.demostracionRealizada"/> Me mostraron la operacion general, realizaron pruebas funcionales frente a mi, y vi todo operando correctamente, desde la sirena hasta la app</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.canalizacionProfesional"/> La canalizacion, cableado, el montaje y la limpieza me parecieron ordenados y profesionales</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.appEnCliente"/> Ya tengo la alarma en mi App y puedo hacer uso de ella</label>
+            </div>
+            <p class="wo-sub">Experiencia del cliente</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.explicacionBasica"/> Recibi la explicacion del funcionamiento del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sabeContactarSoporte"/> Se como contactar al area de soporte tecnico</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.personalProfesional"/> El personal se presento de manera profesional y resolvio mis dudas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.capacitacionRealizada"/> Entiendo las funciones principales del sistema y se me capacito para utilizarlo</label>
+            </div>
+            <p class="wo-sub">Responsabilidad y garantia</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.sabesolicitarSoporte"/> Se como solicitar soporte tecnico en caso de requerir asistencia futura</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.entiendeLimitesGarantia"/> Entiendo que danos por descargas electricas, agua o manipulacion indebida pueden violar la garantia</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="alarmaMarket.recomendoContrasenas"/> Se me recomendo actualizar mis contrasenas y entiendo que es mi responsabilidad resguardarlas</label>
+            </div>
+            <p class="wo-sub">Calificación sobre nuestro servicio (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="alarmaMarket.calificacion === n" (click)="alarmaMarket.calificacion = n">{{ n }}</button>
+              }
+            </div>
+            <p class="wo-sub">¿Nos recomendarías?</p>
+            <div class="nps-btns">
+              <button [class.selected]="alarmaMarket.nps === '0-5'" (click)="alarmaMarket.nps = '0-5'">Poco probable</button>
+              <button [class.selected]="alarmaMarket.nps === '7'" (click)="alarmaMarket.nps = '7'">Neutral</button>
+              <button [class.selected]="alarmaMarket.nps === '8-9'" (click)="alarmaMarket.nps = '8-9'">Probable</button>
+              <button [class.selected]="alarmaMarket.nps === '10'" (click)="alarmaMarket.nps = '10'">Super recomendado</button>
+            </div>
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="alarmaMarket.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (alarmaMarket.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="alarmaMarket.comentarios" rows="2" placeholder="Comentarios..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL CLIENTE ALARMA MARKET -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del cliente</h3>
+            <div class="firma-container">
+              <canvas #firmaMarket width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaMarket)"
+                      (touchstart)="iniciarFirma(firmaMarket)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- HOJA SOFT RESTAURANT INSTALACION -->
+      @if (tipoSeleccionado === 'soft_restaurant_instalacion') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            Soft Restaurant — Instalacion
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Equipo Implementado</h3>
+            <div class="wo-field"><label>Describe el equipo instalado en este proyecto</label><textarea [(ngModel)]="softInstalacion.equipoImplementado" rows="3" placeholder="Describe lo que se instalo..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Infraestructura</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.cableModemCaja"/> Tirado de cable desde modem hasta caja</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.cableImpresorasCaja"/> Tirado de cables desde impresoras hacia caja</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.cableComanderosCaja"/> Tirado de cables desde comanderos hacia caja</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.cableAPWifi"/> Tirado de cable desde AP WiFi hacia caja</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.montajeCajaPeinado"/> Montaje de caja principal y peinado de cables</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Configuracion y Montaje</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.peinadoCableCpu"/> Peinado de cables estetico en zona caja CPU</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.peinadoCableEquipos"/> Peinado de cables estetico desde equipos superiores hacia CPU</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.licenciaActiva"/> Licencia activa con datos reales del negocio</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.baseDatosInicializada"/> Base de datos inicializada para borrar pruebas y ventas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.menuCapturado"/> Menu capturado en sistema y adecuado a los ultimos ajustes del cliente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.softwareSoporte"/> Comprobacion de software para soporte remoto (Anydesk, Rustdesk, otro)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.driversImpresoras"/> Comprobacion de drivers para impresoras, impresion exitosa</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.monitoresTouchAlineados"/> Comprobacion de monitores touch con alineacion perfecta</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.ipFija"/> IP fija configurada</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Conectividad</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.correosConfigurados"/> Configuracion y prueba de correos con el corte diario</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.ingresoRemoto"/> Configuracion para ingreso remoto desatendido</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.internetNavega"/> Internet navega correctamente a +10 Mbps</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.tabletsConfiguradas"/> Tablets con recepcion aceptada</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Fotos de Evidencia Minima</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.fotoCajaInstalada"/> Foto de caja instalada con nuestro background y logo, y se vea en que negocio fue instalado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.fotoTablets"/> Foto de tablets entregadas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.fotoZonaCaja"/> Foto de zona caja peinado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.fotoComanderos"/> Foto de comanderos e impresoras</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Comprobacion Final</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.instalacionValidadaIngeniero"/> Instalacion y configuracion validada correctamente por ingeniero</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.pruebasImpresionOK"/> Todas las pruebas de impresion se realizaron de manera satisfactoria</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.sistemaListoEntrega"/> Sistema listo para entrega, opera con normalidad</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.capacitacionBrindada"/> Se brindo la capacitacion en Ventas / Alta de productos y usuarios / Reportes / Cortes de caja / Permisos</label>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Nombre tecnico responsable</label><input [(ngModel)]="softInstalacion.nombreTecnico" placeholder="Nombre"/></div>
+              <div class="wo-field"><label>Firma tecnico</label><input [(ngModel)]="softInstalacion.firmaTecnico" placeholder="Firma"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Nombre validacion ingenieria</label><input [(ngModel)]="softInstalacion.nombreIngenieria" placeholder="Nombre"/></div>
+              <div class="wo-field"><label>Firma ingenieria</label><input [(ngModel)]="softInstalacion.firmaIngenieria" placeholder="Firma"/></div>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Entrega al Cliente</h3>
+            <p class="wo-sub">Validacion tecnica</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.demostracionRealizada"/> Me mostraron la operacion general del sistema instalado, realizaron pruebas funcionales frente a mi, y vi todo operando correctamente, desde las impresiones, el uso de tablets, y equipos enlazados trabajando con normalidad</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.canalizacionProfesional"/> La canalizacion, cableado, el montaje y la limpieza me parecieron ordenados y profesionales</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.correoPruebaRecibido"/> Ya tengo las pruebas de correo para recibir mi corte del turno</label>
+            </div>
+            <p class="wo-sub">Experiencia del cliente</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.capacitacionCompleta"/> Recibi la capacitacion del funcionamiento del sistema, asi como del sistema en general</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.personalProfesional"/> El personal se presento de manera profesional y resolvio mis dudas durante la capacitacion</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.listoParaUsar"/> Entiendo las funciones principales del sistema instalado y estoy listo para comenzar a utilizarlo</label>
+            </div>
+            <p class="wo-sub">Responsabilidad y garantia</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.sabesolicitarSoporte"/> Se como solicitar soporte tecnico en caso de requerir asistencia futura</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.garantia30Dias"/> Entiendo que la garantia es de 30 dias de manera FULL, y 12 meses para los equipos electronicos</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.entiendeLimitesGarantia"/> Entiendo que danos ocasionados por descargas electricas, agua, configuraciones o intervencion de terceros pueden violar la garantia</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softInstalacion.contrasenaAdministradora"/> Se me indico que la contrasena administradora tiene el poder de hacer todo en el sistema, incluido cancelaciones, mover folios, cambios de precios, permisos, etc.</label>
+            </div>
+            <p class="wo-sub">Calificación sobre nuestro servicio (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="softInstalacion.calificacion === n" (click)="softInstalacion.calificacion = n">{{ n }}</button>
+              }
+            </div>
+            <p class="wo-sub">¿Nos recomendarías?</p>
+            <div class="nps-btns">
+              <button [class.selected]="softInstalacion.nps === '0-5'" (click)="softInstalacion.nps = '0-5'">Poco probable</button>
+              <button [class.selected]="softInstalacion.nps === '7'" (click)="softInstalacion.nps = '7'">Neutral</button>
+              <button [class.selected]="softInstalacion.nps === '8-9'" (click)="softInstalacion.nps = '8-9'">Probable</button>
+              <button [class.selected]="softInstalacion.nps === '10'" (click)="softInstalacion.nps = '10'">Super recomendado</button>
+            </div>
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="softInstalacion.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (softInstalacion.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="softInstalacion.comentarios" rows="2" placeholder="Comentarios..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL CLIENTE SOFT INSTALACION -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del cliente</h3>
+            <div class="firma-container">
+              <canvas #firmaSoftInst width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaSoftInst)"
+                      (touchstart)="iniciarFirma(firmaSoftInst)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- HOJA SOFT RESTAURANT SERVICIO -->
+      @if (tipoSeleccionado === 'soft_restaurant_servicio') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            Soft Restaurant — Servicio / Reparacion
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Detalle del Servicio</h3>
+            <div class="wo-field"><label>Describa el detalle encontrado</label><textarea [(ngModel)]="softServicio.detalleEncontrado" rows="3" placeholder="Describe el problema o detalle encontrado..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Minimos Revisables</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softServicio.pruebaImpresionAreas"/> Prueba de impresion en todas las areas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softServicio.equiposEnlazados"/> Equipos existentes enlazados y tablets funcionando</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softServicio.fechaHoraCorrecta"/> Fecha y hora correcta</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Fotos de Evidencia</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softServicio.fotoDetalleResuelto"/> Foto de detalle resuelto</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Comprobacion de Entrega Final</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softServicio.detalleResuelto"/> El detalle reportado fue resuelto en su totalidad</label>
+            </div>
+            <div class="wo-field"><label>Descripcion general de problema y resolucion</label><textarea [(ngModel)]="softServicio.descripcionProblemaResolucion" rows="3" placeholder="Describe el problema y como se resolvio..."></textarea></div>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="softServicio.sistemaListoEntrega"/> Sistema listo para entrega, opera con normalidad</label>
+            </div>
+            <div class="wo-field"><label>Nombre colaborador responsable</label><input [(ngModel)]="softServicio.nombreColaborador" placeholder="Nombre"/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Calificacion del Servicio</h3>
+            <p class="wo-sub">Califica nuestro servicio brindado (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="softServicio.calificacion === n" (click)="softServicio.calificacion = n">{{ n }}</button>
+              }
+            </div>
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="softServicio.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (softServicio.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="softServicio.comentarios" rows="2" placeholder="Comentarios..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL COLABORADOR SOFT SERVICIO -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del colaborador</h3>
+            <div class="firma-container">
+              <canvas #firmaSoftServ width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaSoftServ)"
+                      (touchstart)="iniciarFirma(firmaSoftServ)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- HOJA SERVICIO / REPARACION GENERAL -->
+      @if (tipoSeleccionado === 'servicio_reparacion_general') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            Servicio / Reparacion General
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Detalle del Servicio</h3>
+            <div class="wo-field"><label>Describa el detalle encontrado</label><textarea [(ngModel)]="reparacionGeneral.detalleEncontrado" rows="3" placeholder="Describe el problema o detalle encontrado..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Fotos de Evidencia</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reparacionGeneral.fotoDetalleResuelto"/> Foto de detalle resuelto</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Comprobacion de Entrega Final</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reparacionGeneral.detalleResuelto"/> El detalle reportado fue resuelto en su totalidad</label>
+            </div>
+            <div class="wo-field"><label>Descripcion general de problema y resolucion</label><textarea [(ngModel)]="reparacionGeneral.descripcionProblemaResolucion" rows="3" placeholder="Describe el problema y como se resolvio..."></textarea></div>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reparacionGeneral.solucionListaEntrega"/> Solucion de reporte lista para entrega, opera con normalidad</label>
+            </div>
+            <div class="wo-field"><label>Nombre colaborador responsable</label><input [(ngModel)]="reparacionGeneral.nombreColaborador" placeholder="Nombre"/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Calificacion del Servicio</h3>
+            <p class="wo-sub">Califica nuestro servicio brindado (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="reparacionGeneral.calificacion === n" (click)="reparacionGeneral.calificacion = n">{{ n }}</button>
+              }
+            </div>
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="reparacionGeneral.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (reparacionGeneral.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="reparacionGeneral.comentarios" rows="2" placeholder="Comentarios..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL COLABORADOR REPARACION GENERAL -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del colaborador</h3>
+            <div class="firma-container">
+              <canvas #firmaReparacion width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaReparacion)"
+                      (touchstart)="iniciarFirma(firmaReparacion)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- HDT DIAGNOSTICO DE LABORATORIO -->
+      @if (tipoSeleccionado === 'lab_diagnostico') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            HDT Diagnostico de Laboratorio
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Datos Generales</h3>
+            <div class="wo-info-row"><span class="wo-info-label">Folio:</span><span class="wo-info-value">{{ task.folioId }}</span></div>
+            <div class="wo-info-row"><span class="wo-info-label">Fecha:</span><span class="wo-info-value">{{ fechaTarea }}</span></div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Ingeniero responsable</label><input [(ngModel)]="labDiagnostico.ingeniero" placeholder="Nombre del ingeniero"/></div>
+              <div class="wo-field"><label>Cliente</label><input [(ngModel)]="labDiagnostico.cliente" [placeholder]="task.cliente"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Marca y modelo</label><input [(ngModel)]="labDiagnostico.marcaModelo" placeholder="Marca y modelo"/></div>
+              <div class="wo-field"><label>Numero de serie</label><input [(ngModel)]="labDiagnostico.numeroSerie" placeholder="N° de serie"/></div>
+            </div>
+            <p class="wo-sub">Tipo de servicio</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.tipoGarantia"/> Garantia</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.tipoReparacion"/> Reparacion</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.tipoRevision"/> Revision</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validacion Inicial</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.sinDanosVisibles"/> Sin danos visibles</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.golpesDetectados"/> Golpes detectados</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.humedadDetectada"/> Humedad detectada</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.sulfatacionDetectada"/> Sulfatacion detectada</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.componentesFaltantes"/> Componentes faltantes</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.sellosGarantiaDanados"/> Sellos de garantia danados</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.manipulacionPreviaDetectada"/> Manipulacion previa detectada</label>
+            </div>
+            <div class="wo-field"><label>Otro / Observaciones</label><textarea [(ngModel)]="labDiagnostico.observacionesEstado" rows="2" placeholder="Observaciones del estado fisico..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Pruebas Realizadas</h3>
+            <p class="wo-sub">Energia</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.enciendeCorrectamente"/> Enciende correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.noEnciende"/> No enciende</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.fuentePoderFuncional"/> Fuente de poder funcional</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.fuentePoderDefectuosa"/> Fuente de poder defectuosa</label>
+            </div>
+            <p class="wo-sub">Comunicacion</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.comunicacionCorrecta"/> Comunicacion correcta</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.comunicacionIntermitente"/> Comunicacion intermitente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.sinComunicacion"/> Sin comunicacion</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.comunicacionNoAplica"/> No aplica</label>
+            </div>
+            <p class="wo-sub">Operacion General</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.operaCorrectamente"/> Opera correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.fallaEnTodo"/> Falla en todo momento</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.fallaIntermitente"/> Falla intermitente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.errorConfiguracion"/> Error de configuracion</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.firmwareDesactualizado"/> Firmware desactualizado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.firmwareCorrupto"/> Firmware corrupto</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.danoFisicoInterno"/> Dano fisico interno</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.danoPorDescargaElectrica"/> Dano por descarga electrica</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.danoPorHumedad"/> Dano por humedad</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.noSeDetectoFalla"/> No se detecto falla</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Diagnostico Tecnico</h3>
+            <div class="wo-field"><label>Descripcion tecnica de la falla encontrada</label><textarea [(ngModel)]="labDiagnostico.descripcionFalla" rows="4" placeholder="Describe la falla tecnica encontrada..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Evidencias</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.fotografiasInternas"/> Fotografias internas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.fotografiasComponentesDanados"/> Fotografias de componentes danados</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.videoFuncionamiento"/> Video de funcionamiento</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.evidenciaWhatsapp"/> Evidencia adjunta al grupo de WhatsApp</label>
+            </div>
+            <div class="wo-field-row" style="margin-top:8px; gap:8px;">
+              <button class="btn-secondary" style="flex:1; padding:10px; border-radius:8px; cursor:pointer;" (click)="copiarFolio()">Copiar folio</button>
+              <button style="flex:1; padding:10px; border-radius:8px; cursor:pointer; background:#25D366; color:#fff; font-weight:600; border:none;" (click)="abrirWhatsapp()">💬 Abrir WhatsApp</button>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Accion Recomendada</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.accionReconfiguracion"/> Reconfiguracion</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.accionActualizacionFirmware"/> Actualizacion de firmware</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.accionReparacionInterna"/> Reparacion interna</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.accionReemplazoComponente"/> Reemplazo de componente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.accionReemplazoTotal"/> Reemplazo total del equipo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.accionEnvioGarantia"/> Envio a garantia fabricante</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.accionSinReparacion"/> Equipo sin reparacion requerida</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.accionNoReparable"/> No reparable</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Refacciones Requeridas</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.noRequiereRefacciones"/> No requiere</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.siRequiereRefacciones"/> Si requiere</label>
+            </div>
+            <div class="wo-field"><label>Descripcion</label><textarea [(ngModel)]="labDiagnostico.descripcionRefacciones" rows="2" placeholder="Describe las refacciones necesarias..."></textarea></div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Costo estimado ($)</label><input type="number" [(ngModel)]="labDiagnostico.costoEstimado" min="0"/></div>
+              <div class="wo-field"><label>Costo mano de obra ($)</label><input type="number" [(ngModel)]="labDiagnostico.costoManoObra" min="0"/></div>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Resultado Final</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.resultadoReparado"/> Reparado y probado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.resultadoPendienteGarantia"/> Pendiente de validacion de garantia con proveedor</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.resultadoPendienteRefacciones"/> Pendiente de refacciones</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.resultadoEnviarProveedor"/> Enviar a proveedor</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.resultadoGarantiaCobertura"/> Garantia con cobertura</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.resultadoGarantiaRechazada"/> Garantia rechazada</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.resultadoListoEntrega"/> Equipo listo para entrega</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="labDiagnostico.resultadoNoReparable"/> Equipo no reparable</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Tiempo y Dictamen</h3>
+            <div class="wo-field"><label>Horas invertidas</label><input type="number" [(ngModel)]="labDiagnostico.horasInvertidas" min="0"/></div>
+            <div class="wo-field"><label>Dictamen tecnico</label><textarea [(ngModel)]="labDiagnostico.dictamenTecnico" rows="3" placeholder="Dictamen tecnico final..."></textarea></div>
+            <div class="wo-field"><label>Firma del tecnico responsable</label><input [(ngModel)]="labDiagnostico.firmaTecnico" placeholder="Nombre del tecnico"/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Enviar para cotizacion</h3>
+            <div class="wo-field"><label>Correo de destino</label><input [(ngModel)]="labDiagnostico.correoEnvioCotizacion" type="email" placeholder="sistemasintegra.ventas@gmail.com"/></div>
+            <button class="btn-enviar-credenciales" (click)="enviarCotizacion()" [disabled]="enviandoCotizacion">
+              {{ enviandoCotizacion ? 'Enviando...' : 'Enviar cotizacion' }}
+            </button>
+          </div>
+
+          <!-- FIRMA DEL TECNICO LAB DIAGNOSTICO -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del tecnico</h3>
+            <div class="firma-container">
+              <canvas #firmaLabDiag width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaLabDiag)"
+                      (touchstart)="iniciarFirma(firmaLabDiag)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- CHECKLIST RECIBO DE EQUIPO -->
+      @if (tipoSeleccionado === 'recibo_equipo') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            Checklist Recibo de Equipo
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Datos Generales</h3>
+            <div class="wo-info-row"><span class="wo-info-label">Folio:</span><span class="wo-info-value">{{ task.folioId }}</span></div>
+            <div class="wo-info-row"><span class="wo-info-label">Fecha:</span><span class="wo-info-value">{{ fechaTarea }}</span></div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Colaborador que recibe</label><input [(ngModel)]="reciboEquipo.colaborador" placeholder="Nombre"/></div>
+              <div class="wo-field"><label>Cliente</label><input [(ngModel)]="reciboEquipo.cliente" [placeholder]="task.cliente"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Telefono</label><input [(ngModel)]="reciboEquipo.telefono" placeholder="Telefono"/></div>
+              <div class="wo-field"><label>Correo electronico</label><input [(ngModel)]="reciboEquipo.correoElectronico" type="email" placeholder="correo@cliente.com"/></div>
+            </div>
+            <div class="wo-field"><label>Direccion de envio</label><input [(ngModel)]="reciboEquipo.direccionEnvio" placeholder="Direccion"/></div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Marca y modelo</label><input [(ngModel)]="reciboEquipo.marcaModelo" placeholder="Marca y modelo"/></div>
+              <div class="wo-field"><label>Numero de serie (SN)</label><input [(ngModel)]="reciboEquipo.sn" placeholder="N° serie"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Contrasena proporcionada</label><input [(ngModel)]="reciboEquipo.contraseniaCliente" placeholder="Contrasena"/></div>
+              <div class="wo-field"><label>Direccion IP (si aplica)</label><input [(ngModel)]="reciboEquipo.direccionIP" placeholder="IP"/></div>
+            </div>
+            <p class="wo-sub">Prioridad del servicio</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.prioridadBaja"/> Baja</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.prioridadMedia"/> Media</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.prioridadAlta"/> Alta</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.prioridadCritica"/> Critica</label>
+            </div>
+            <div class="wo-field"><label>Tiempo estimado comprometido con cliente</label><input [(ngModel)]="reciboEquipo.tiempoEstimado" placeholder="Ej. 3 dias habiles"/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Detalles de Recibo</h3>
+            <div class="wo-field"><label>Descripcion de la falla</label><textarea [(ngModel)]="reciboEquipo.descripcionFalla" rows="3" placeholder="Describe la falla reportada por el cliente..."></textarea></div>
+            <p class="wo-sub">Tipo</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.tipoGarantia"/> Garantia</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.tipoReparacion"/> Reparacion</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.tipoRevision"/> Revision</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.tipoDevolucion"/> Devolucion</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Accesorios Recibidos</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.cajaOriginal"/> Caja original</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.cablesConexion"/> Cables de conexion</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.baseMontaje"/> Base de montaje</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.bateria"/> Bateria</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.fuentePoder"/> Fuente de poder</label>
+            </div>
+            <div class="wo-field"><label>Otro accesorio</label><input [(ngModel)]="reciboEquipo.otroAccesorio" placeholder="Otro..."/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Estado al Recibir</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.estadoEnciende"/> Enciende</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.estadoNoEnciende"/> No enciende</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.estadoNoPosibleProbar"/> No fue posible probar</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Estado Visible del Equipo</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.huelaQuemado"/> Huele a quemado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.estaGolpeado"/> Esta golpeado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.estaQuebrado"/> Esta quebrado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.pantallaRota"/> Pantalla rota</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.estaRaspado"/> Esta raspado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.faltanTornillos"/> Le faltan tornillos</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.indiciosHumedad"/> Tiene indicios de humedad</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="reciboEquipo.etiquetasDanadas"/> Etiquetas de garantia danadas o removidas</label>
+            </div>
+            <div class="wo-field"><label>Otro estado</label><input [(ngModel)]="reciboEquipo.otroEstado" placeholder="Otro..."/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Envio de documentos</h3>
+            <div class="wo-field-row" style="gap:8px; margin-top:4px;">
+              <button class="btn-enviar-credenciales" style="flex:1;" (click)="enviarReciboCliente()" [disabled]="enviandoReciboCliente">
+                {{ enviandoReciboCliente ? 'Enviando...' : 'Enviar copia al cliente' }}
+              </button>
+              <button class="btn-enviar-credenciales" style="flex:1; background:#2A7EA8;" (click)="enviarReciboIngenieria()" [disabled]="enviandoReciboIngenieria">
+                {{ enviandoReciboIngenieria ? 'Enviando...' : 'Enviar a ingenieria' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- POS Y PERIFERICOS INSTALACION -->
+      @if (tipoSeleccionado === 'pos_perifericos_instalacion') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            POS y Perifericos — Instalacion
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validacion de Servicio Interno</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.limpiezaAreas"/> Limpieza de areas en donde se trabajo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.revisionConexiones"/> Revise y corregi conexiones que podrian dar problemas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.cableadoOrganizado"/> Todo el cableado quedo correctamente organizado y asegurado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.alimentacionVerificada"/> Se verifico alimentacion regulada de todos los equipos instalados</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.comunicacionVerificada"/> Se verifico comunicacion entre todos los dispositivos del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.internetVerificado"/> Se verifico acceso a internet y red local</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.pruebasVenta"/> Se realizaron pruebas completas de venta, cobro e impresion</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.perifericosVerificados"/> Se verifico correcta operacion de todos los perifericos instalados</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Equipos Instalados</h3>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Terminales POS</label><input type="number" [(ngModel)]="posInstalacion.cantidadTerminalesPOS" min="0"/></div>
+              <div class="wo-field"><label>Cajas</label><input type="number" [(ngModel)]="posInstalacion.cantidadCajas" min="0"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Pantallas cliente</label><input type="number" [(ngModel)]="posInstalacion.cantidadPantallasCliente" min="0"/></div>
+              <div class="wo-field"><label>Impresoras de tickets</label><input type="number" [(ngModel)]="posInstalacion.cantidadImpresoras" min="0"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Basculas integradas</label><input type="number" [(ngModel)]="posInstalacion.cantidadBasculas" min="0"/></div>
+              <div class="wo-field"><label>Etiquetadoras</label><input type="number" [(ngModel)]="posInstalacion.cantidadEtiquetadoras" min="0"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Checadores de precios</label><input type="number" [(ngModel)]="posInstalacion.cantidadChecadores" min="0"/></div>
+              <div class="wo-field"><label>Kioskos autopedido</label><input type="number" [(ngModel)]="posInstalacion.cantidadKioskos" min="0"/></div>
+            </div>
+            <div class="wo-field"><label>Tabletas</label><input type="number" [(ngModel)]="posInstalacion.cantidadTabletas" min="0"/></div>
+            <div class="wo-field"><label>Materiales utilizados adicionales</label><textarea [(ngModel)]="posInstalacion.materialesAdicionales" rows="2" placeholder="Materiales adicionales..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Credenciales de Acceso</h3>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Usuario Administrador</label><input [(ngModel)]="posInstalacion.usuarioAdmin" placeholder="Usuario"/></div>
+              <div class="wo-field"><label>Contrasena Administrador</label><input [(ngModel)]="posInstalacion.contrasenaAdmin" placeholder="Contrasena"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Contrasena Windows</label><input [(ngModel)]="posInstalacion.contrasenaWindows" placeholder="Contrasena Windows"/></div>
+              <div class="wo-field"><label>Datos de licencia</label><input [(ngModel)]="posInstalacion.datosLicencia" placeholder="Licencia"/></div>
+            </div>
+            <div class="wo-field"><label>Otras credenciales</label><textarea [(ngModel)]="posInstalacion.otrasCredenciales" rows="2" placeholder="Otras credenciales..."></textarea></div>
+            <div class="wo-field"><label>Validacion de ingenieria / supervisor</label><input [(ngModel)]="posInstalacion.firmaSupervisor" placeholder="Nombre del supervisor"/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validaciones Tecnicas</h3>
+            <div class="wo-info-row"><span class="wo-info-label">Folio:</span><span class="wo-info-value">{{ task.folioId }}</span></div>
+            <div class="wo-info-row"><span class="wo-info-label">Fecha:</span><span class="wo-info-value">{{ fechaTarea }}</span></div>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.sistemaOperativoVerificado"/> Se verifico inicio correcto del sistema operativo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.accesoUsuariosVerificado"/> Se verifico acceso de usuarios al sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.officeRemotoVerificado"/> Se verifico instalacion de software de acceso remoto</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.sistemaFuncionaNormal"/> Se verifico que el sistema funcionara con normalidad</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.perifericosFuncionan"/> Se verifico funcionamiento de perifericos</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.impresionTicketsVerificada"/> Se verifico impresion de tickets correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.cajonDineroVerificado"/> Se verifico apertura automatica del cajon de dinero</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.basculaVerificada"/> Se verifico funcionamiento correcto de bascula(s) (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.etiquetasVerificadas"/> Se verifico impresion correcta de etiquetas (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.checadorVerificado"/> Se verifico funcionamiento correcto de checador(es) de precios (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.sincronizacionNube"/> Se verifico sincronizacion nube (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.respaldoAutomatico"/> Se verifico respaldo automatico de informacion (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.reportesAutomaticos"/> Se verifico envio de reportes automaticos (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.terminalesMoviles"/> Se verifico funcionamiento de terminales moviles o tabletas (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.fechaHoraVerificada"/> Fecha y hora verificadas correctamente</label>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Internet Bajada (Mbps)</label><input [(ngModel)]="posInstalacion.internetBajada" placeholder="Mbps"/></div>
+              <div class="wo-field"><label>Internet Subida (Mbps)</label><input [(ngModel)]="posInstalacion.internetSubida" placeholder="Mbps"/></div>
+            </div>
+            <div class="wo-field"><label>Correos para envio de reportes</label><input [(ngModel)]="posInstalacion.correosReportes" placeholder="correo1@mail.com, correo2@mail.com"/></div>
+            <div class="wo-field"><label>Recomendaciones detectadas</label><textarea [(ngModel)]="posInstalacion.recomendaciones" rows="2" placeholder="Recomendaciones..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Capacitacion Realizada</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capAltaProductos"/> Alta de productos / servicios / socios</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capInventario"/> Tour en control de inventario</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capVentaCobro"/> Venta y cobro, devoluciones</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capCortesCaja"/> Cortes de caja</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capImpresionTickets"/> Impresion de tickets</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capBascula"/> Uso de bascula</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capEtiquetadora"/> Uso de etiquetadora</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capReportes"/> Consulta de reportes</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capUsuariosPermisos"/> Alta de usuarios y gestion de permisos</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Entrega al Cliente</h3>
+            <p class="wo-sub">Validacion tecnica</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.demostracionRealizada"/> Me mostraron el funcionamiento completo del sistema instalado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.pruebasVentaCliente"/> Realizaron pruebas de venta, cobro e impresion frente a mi</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.canalizacionProfesional"/> El cableado, montaje y limpieza me parecieron ordenados y profesionales</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.accesoSistema"/> Tengo acceso al sistema y puedo utilizarlo correctamente</label>
+            </div>
+            <p class="wo-sub">Experiencia del cliente</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.capacitacionRecibida"/> Recibi capacitacion basica de operacion y puedo utilizar el sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.personalProfesional"/> El personal se presento de manera profesional y resolvio mis dudas</label>
+            </div>
+            <p class="wo-sub">Responsabilidad y garantia</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.sabesolicitarSoporte"/> Se como solicitar soporte tecnico en caso de requerir asistencia futura</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.entiendeLimitesGarantia"/> Entiendo que modificaciones o manipulaciones externas pueden afectar el sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="posInstalacion.entiendeDanosExternos"/> Entiendo que danos por descargas electricas, agua, virus o terceros pueden afectar la garantia</label>
+            </div>
+            <p class="wo-sub">Calificanos (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="posInstalacion.calificacion === n" (click)="posInstalacion.calificacion = n">{{ n }}</button>
+              }
+            </div>
+            <p class="wo-sub">Que tan probable es que nos recomiende?</p>
+            <div class="nps-btns">
+              <button [class.selected]="posInstalacion.nps === '0-5'" (click)="posInstalacion.nps = '0-5'">Poco probable</button>
+              <button [class.selected]="posInstalacion.nps === '6-7'" (click)="posInstalacion.nps = '6-7'">Probable</button>
+              <button [class.selected]="posInstalacion.nps === '8-9'" (click)="posInstalacion.nps = '8-9'">Muy probable</button>
+              <button [class.selected]="posInstalacion.nps === '10'" (click)="posInstalacion.nps = '10'">Super recomendado</button>
+            </div>
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="posInstalacion.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (posInstalacion.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="posInstalacion.comentarios" rows="2" placeholder="Comentarios..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL CLIENTE POS -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del cliente</h3>
+            <div class="firma-container">
+              <canvas #firmaPos width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaPos)"
+                      (touchstart)="iniciarFirma(firmaPos)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- CANALIZACION CONDUIT -->
+      @if (tipoSeleccionado === 'canalizacion_conduit') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            Canalizacion Conduit — Instalacion
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validacion de Servicio Interno</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="canalizacion.limpiezaAreas"/> Limpieza de areas en donde se trabajo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="canalizacion.retiroResiduos"/> Se retiraron residuos de tuberia</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="canalizacion.tuberiaFirme"/> Se verifico que no se sienta la tuberia suelta y fragil</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="canalizacion.tuberiaCorrctamenteFijada"/> Todos los tramos de tuberia quedaron correctamente fijados (max 1.2m de separacion)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="canalizacion.alineacionEstetica"/> Se verifico alineacion y estetica general de la instalacion</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Materiales Instalados</h3>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Metros de tuberia conduit</label><input type="number" [(ngModel)]="canalizacion.metrosTuberia" min="0"/></div>
+              <div class="wo-field"><label>Registros tipo L, T, paso</label><input type="number" [(ngModel)]="canalizacion.cantidadRegistros" min="0"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Curvas instaladas</label><input type="number" [(ngModel)]="canalizacion.cantidadCurvas" min="0"/></div>
+              <div class="wo-field"><label>Cajas condulet / registro</label><input type="number" [(ngModel)]="canalizacion.cantidadCajasCondulet" min="0"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Abrazaderas / soportes</label><input type="number" [(ngModel)]="canalizacion.cantidadAbrazaderas" min="0"/></div>
+              <div class="wo-field"><label>Licuatite</label><input type="number" [(ngModel)]="canalizacion.cantidadLicuatite" min="0"/></div>
+            </div>
+            <div class="wo-field"><label>Materiales adicionales a lo cotizado</label><textarea [(ngModel)]="canalizacion.materialesAdicionales" rows="2" placeholder="Materiales adicionales..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validacion General</h3>
+            <div class="wo-info-row"><span class="wo-info-label">Folio:</span><span class="wo-info-value">{{ task.folioId }}</span></div>
+            <div class="wo-info-row"><span class="wo-info-label">Fecha:</span><span class="wo-info-value">{{ fechaTarea }}</span></div>
+            <div class="wo-field"><label>Detalle el trabajo realizado, trayecto y ubicaciones finales</label><textarea [(ngModel)]="canalizacion.detalleTrabajoRealizado" rows="5" placeholder="Describe el trayecto, registros y ubicaciones..."></textarea></div>
+            <div class="wo-field"><label>Nombre y firma del tecnico</label><input [(ngModel)]="canalizacion.firmaTecnico" placeholder="Nombre del tecnico"/></div>
+          </div>
+
+          <!-- FIRMA DEL TECNICO CANALIZACION -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del tecnico</h3>
+            <div class="firma-container">
+              <canvas #firmaCanalizacion width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaCanalizacion)"
+                      (touchstart)="iniciarFirma(firmaCanalizacion)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- CCTV SERVICIO MANTENIMIENTO REPARACION -->
+      @if (tipoSeleccionado === 'cctv_servicio') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            CCTV — Servicio / Mantenimiento / Reparacion
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validacion de Servicio Interno</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.limpiezaAreas"/> Limpieza de areas en donde se trabajo</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.revisionConexiones"/> Revise y corregi conexiones con falsos contactos, humedad o terminales flojas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.grabadorLimpio"/> El grabador quedo limpio, organizado y correctamente cerrado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.cableadoIdentificado"/> El cableado quedo correctamente identificado y peinado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.alimentacionVerificada"/> Se verifico alimentacion electrica del grabador y dispositivos auxiliares</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.comunicacionVerificada"/> Se verifico comunicacion correcta entre camaras y grabador</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.pruebasVisualizacion"/> Se realizaron pruebas de visualizacion y grabacion en todas las camaras intervenidas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.estadoSistemaDocumentado"/> Se verifico estado general del sistema y se documentaron hallazgos</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Equipos</h3>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Camaras con video</label><input type="number" [(ngModel)]="cctvServicio.camarasConVideo" min="0"/></div>
+              <div class="wo-field"><label>Camaras con mantenimiento</label><input type="number" [(ngModel)]="cctvServicio.camarasMantenimiento" min="0"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Camaras reemplazadas</label><input type="number" [(ngModel)]="cctvServicio.camarasReemplazadas" min="0"/></div>
+              <div class="wo-field"><label>Camaras sin video</label><input type="number" [(ngModel)]="cctvServicio.camarasSinVideo" min="0"/></div>
+            </div>
+            <div class="wo-field"><label>Capacidad de almacenamiento</label><input [(ngModel)]="cctvServicio.capacidadAlmacenamiento" placeholder="Ej. 1TB"/></div>
+            <div class="wo-field"><label>Materiales utilizados adicionales</label><textarea [(ngModel)]="cctvServicio.materialesAdicionales" rows="2" placeholder="Materiales..."></textarea></div>
+            <div class="wo-field"><label>Refacciones utilizadas</label><textarea [(ngModel)]="cctvServicio.refaccionesUtilizadas" rows="2" placeholder="Refacciones..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Credenciales de Acceso</h3>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>N° Serie del Grabador</label><input [(ngModel)]="cctvServicio.nSerieGrabador" placeholder="N° serie"/></div>
+              <div class="wo-field"><label>Contrasena del Grabador</label><input [(ngModel)]="cctvServicio.contrasenaGrabador" placeholder="Contrasena"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Contrasena Hik-Connect</label><input [(ngModel)]="cctvServicio.contrasenaHikConnect" placeholder="Contrasena Hik-Connect"/></div>
+              <div class="wo-field"><label>Correo / Telefono asociado</label><input [(ngModel)]="cctvServicio.correoAsociado" placeholder="correo@cliente.com"/></div>
+            </div>
+            <div class="wo-field"><label>Otros datos adicionales</label><textarea [(ngModel)]="cctvServicio.otrosDatosCredenciales" rows="2" placeholder="Otros datos..."></textarea></div>
+            <div class="wo-field"><label>Validacion de ingenieria / supervisor</label><input [(ngModel)]="cctvServicio.firmaSupervisor" placeholder="Nombre del supervisor"/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validacion General</h3>
+            <div class="wo-info-row"><span class="wo-info-label">Folio:</span><span class="wo-info-value">{{ task.folioId }}</span></div>
+            <div class="wo-info-row"><span class="wo-info-label">Fecha:</span><span class="wo-info-value">{{ fechaTarea }}</span></div>
+            <div class="wo-field"><label>Detalle reportado por cliente</label><textarea [(ngModel)]="cctvServicio.detalleCliente" rows="3" placeholder="Que reporto el cliente..."></textarea></div>
+            <div class="wo-field"><label>Descripcion de trabajos realizados</label><textarea [(ngModel)]="cctvServicio.trabajosRealizados" rows="3" placeholder="Describe los trabajos realizados..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Validaciones Tecnicas</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.camarasVisualizando"/> Se verifico visualizacion de todas las camaras funcionando</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.grabacionConfigurada"/> Se verifico configuracion de grabacion correctamente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.grabacionesVerificadas"/> Se verificaron grabaciones en camaras operativas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.reproduccionVerificada"/> Se verifico reproduccion de grabaciones</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.fechaHoraVerificada"/> Se verifico fecha y hora del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.discoVerificado"/> Se verifico funcionamiento correcto del disco duro</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.videoMonitorCliente"/> Se verifico video en monitor de cliente</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accesoRemotoVerificado"/> Se verifico acceso remoto mediante Hik-Connect</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.notificacionesVerificadas"/> Se verifico funcionamiento correcto de notificaciones (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.microfonoLuzBlanca"/> Se verifico funcionamiento de microfono/luz blanca en app (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.analiticosVerificados"/> Se verifico funcionamiento de analiticos inteligentes (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.upsVerificado"/> Se verifico funcionamiento correcto del respaldo electrico UPS (si aplica)</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.switchesPoEVerificados"/> Se verifico funcionamiento correcto de switches PoE (si aplica)</label>
+            </div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Diagnostico Realizado</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoConfiguracion"/> Configuracion incorrecta</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoFuentePoder"/> Dano en fuente de poder</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoCamara"/> Dano en camara</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoCableado"/> Dano en cableado</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoConectores"/> Dano en conectores</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoDiscoDuro"/> Dano en disco duro</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoRed"/> Problema de red</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoInternet"/> Problema de internet</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoElectrico"/> Problema electrico</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.diagnosticoSinFalla"/> No se detecto falla</label>
+            </div>
+            <div class="wo-field"><label>Otro diagnostico</label><input [(ngModel)]="cctvServicio.diagnosticoOtro" placeholder="Otro..."/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Datos Tecnicos</h3>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Internet Bajada (Mbps)</label><input [(ngModel)]="cctvServicio.internetBajada" placeholder="Mbps"/></div>
+              <div class="wo-field"><label>Internet Subida (Mbps)</label><input [(ngModel)]="cctvServicio.internetSubida" placeholder="Mbps"/></div>
+            </div>
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Tiempo estimado grabacion</label><input [(ngModel)]="cctvServicio.tiempoGrabacion" placeholder="Ej. 15 dias"/></div>
+              <div class="wo-field"><label>Ubicacion del grabador</label><input [(ngModel)]="cctvServicio.ubicacionGrabador" placeholder="Ubicacion"/></div>
+            </div>
+            <div class="wo-field"><label>Recomendaciones detectadas</label><textarea [(ngModel)]="cctvServicio.recomendaciones" rows="2" placeholder="Recomendaciones..."></textarea></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Acciones Recomendadas</h3>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accionSustitucionCamaras"/> Sustitucion de camaras</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accionSustitucionDisco"/> Sustitucion de disco duro</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accionSustitucionUPS"/> Sustitucion de UPS / baterias</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accionSustitucionFuente"/> Sustitucion de fuente de poder</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accionMejoraAlmacenamiento"/> Mejora de almacenamiento</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accionMantenimiento"/> Mantenimiento</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accionPolizaServicio"/> Poliza de servicio continuo</label>
+            </div>
+            <div class="wo-field"><label>Otra accion</label><input [(ngModel)]="cctvServicio.accionOtra" placeholder="Otra..."/></div>
+          </div>
+          <div class="wo-block">
+            <h3 class="wo-block-title">Entrega al Cliente</h3>
+            <p class="wo-sub">Validacion tecnica</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.demostracionRealizada"/> Me mostraron el funcionamiento del sistema despues del servicio</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.visualizacionGrabaciones"/> Me mostraron visualizacion en vivo y grabaciones almacenadas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.explicacionFallas"/> Me explicaron las fallas encontradas y las acciones correctivas realizadas</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.canalizacionProfesional"/> La canalizacion, cableado y limpieza me parecieron ordenados y profesionales</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.accesoHikConnect"/> Tengo acceso al sistema mediante Hik-Connect y/o monitor local</label>
+            </div>
+            <p class="wo-sub">Experiencia del cliente</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.explicacionCondiciones"/> Recibi explicacion clara sobre las condiciones actuales del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.personalProfesional"/> El personal se presento de manera profesional y resolvio mis dudas</label>
+            </div>
+            <p class="wo-sub">Responsabilidad y garantia</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.sabesolicitarSoporte"/> Se como solicitar soporte tecnico en caso de requerir asistencia futura</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.entiendeEquiposExistentes"/> Entiendo que equipos existentes pueden presentar fallas futuras por desgaste natural</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="cctvServicio.entiendeLimitesGarantia"/> Entiendo que danos por descargas electricas, agua o manipulacion indebida pueden afectar el sistema</label>
+            </div>
+            <p class="wo-sub">Calificanos (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="cctvServicio.calificacion === n" (click)="cctvServicio.calificacion = n">{{ n }}</button>
+              }
+            </div>
+            <p class="wo-sub">Que tan probable es que nos recomiende?</p>
+            <div class="nps-btns">
+              <button [class.selected]="cctvServicio.nps === '0-5'" (click)="cctvServicio.nps = '0-5'">Poco probable</button>
+              <button [class.selected]="cctvServicio.nps === '6-7'" (click)="cctvServicio.nps = '6-7'">Probable</button>
+              <button [class.selected]="cctvServicio.nps === '8-9'" (click)="cctvServicio.nps = '8-9'">Muy probable</button>
+              <button [class.selected]="cctvServicio.nps === '10'" (click)="cctvServicio.nps = '10'">Super recomendado</button>
+            </div>
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="cctvServicio.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (cctvServicio.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="cctvServicio.comentarios" rows="2" placeholder="Comentarios..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL CLIENTE CCTV SERVICIO -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del cliente</h3>
+            <div class="firma-container">
+              <canvas #firmaCctvServ width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaCctvServ)"
+                      (touchstart)="iniciarFirma(firmaCctvServ)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- HOJA GENERAL -->
+      @if (tipoSeleccionado &&
+           tipoSeleccionado !== 'cctv_instalacion' &&
+           tipoSeleccionado !== 'cctv_reparacion' &&
+           tipoSeleccionado !== 'alarma_instalacion' &&
+           tipoSeleccionado !== 'alarma_mercado_san_juan' &&
+           tipoSeleccionado !== 'soft_restaurant_instalacion' &&
+           tipoSeleccionado !== 'soft_restaurant_servicio' &&
+           tipoSeleccionado !== 'servicio_reparacion_general' &&
+           tipoSeleccionado !== 'lab_diagnostico' &&
+           tipoSeleccionado !== 'recibo_equipo' &&
+           tipoSeleccionado !== 'pos_perifericos_instalacion' &&
+           tipoSeleccionado !== 'canalizacion_conduit' &&
+           tipoSeleccionado !== 'cctv_servicio') {
+        <div class="wo-form">
+          <div class="wo-section-title">
+            {{ tipos[tipos.findIndex(t => t.value === tipoSeleccionado)]?.label || tipoSeleccionado }}
+            @if (!modoMultiple) { <button class="btn-cambiar" (click)="tipoSeleccionado = null">Cambiar tipo</button> }
+          </div>
+
+          <div class="wo-block">
+            <h3 class="wo-block-title">Bloque Interno</h3>
+            <p class="wo-sub">Tipo de servicio</p>
+            <div class="chips-grid">
+              @for (ts of tiposServicio; track ts) {
+                <button class="chip" [class.selected]="general.tipoServicio.includes(ts)" (click)="toggleTipoServicio(ts)">{{ ts }}</button>
+              }
+            </div>
+
+            <p class="wo-sub">Sistema atendido</p>
+            <div class="chips-grid">
+              @for (sa of sistemasAtendidos; track sa) {
+                <button class="chip" [class.selected]="general.sistemaAtendido.includes(sa)" (click)="toggleSistema(sa)">{{ sa }}</button>
+              }
+            </div>
+
+            <div class="wo-field"><label>Materiales utilizados</label><textarea [(ngModel)]="general.materialesUtilizados" rows="2" placeholder="Materiales..."></textarea></div>
+          </div>
+
+          <div class="wo-block">
+            <h3 class="wo-block-title">Bloque de Validacion General</h3>
+            <div class="wo-info-row"><span class="wo-info-label">Folio:</span><span class="wo-info-value">{{ task.folioId }}</span></div>
+            <div class="wo-info-row"><span class="wo-info-label">Fecha:</span><span class="wo-info-value">{{ fechaTarea }}</span></div>
+            <div class="wo-field"><label>Reporte inicial del cliente</label><textarea [(ngModel)]="general.reporteCliente" rows="2" placeholder="Que reporto el cliente?"></textarea></div>
+            <div class="wo-field"><label>Diagnostico tecnico detallado</label><textarea [(ngModel)]="general.diagnosticoTecnico" rows="3" placeholder="Diagnostico..."></textarea></div>
+
+            <p class="wo-sub">Actividades realizadas</p>
+            <div class="chips-grid">
+              @for (act of actividadesOpciones; track act) {
+                <button class="chip" [class.selected]="general.actividadesRealizadas.includes(act)" (click)="toggleActividad(act)">{{ act }}</button>
+              }
+            </div>
+
+            <div class="wo-field"><label>Detalles para que el cliente tome en cuenta</label><textarea [(ngModel)]="general.detallesCliente" rows="2" placeholder="Detalles detectados..."></textarea></div>
+
+            <div class="wo-field-row">
+              <div class="wo-field"><label>Internet Bajada (Mbps)</label><input [(ngModel)]="general.internetBajada" placeholder="Mbps"/></div>
+              <div class="wo-field"><label>Internet Subida (Mbps)</label><input [(ngModel)]="general.internetSubida" placeholder="Mbps"/></div>
+            </div>
+
+            <div class="wo-field"><label>Firma del tecnico</label><input [(ngModel)]="general.firmaTecnico" placeholder="Nombre del tecnico"/></div>
+          </div>
+
+          <div class="wo-block">
+            <h3 class="wo-block-title">Bloque Entrega al Cliente</h3>
+            <p class="wo-sub">Validacion tecnica</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.demostracionRealizada"/> Me fue demostrada la operacion general y se realizaron pruebas funcionales frente a mi</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.canalizacionProfesional"/> La canalizacion, cableado y montaje me parecieron ordenados y profesionales</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.areaLimpia"/> El area de trabajo fue entregada limpia y funcional</label>
+            </div>
+
+            <p class="wo-sub">Experiencia del cliente</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.explicacionBasica"/> Recibi explicacion basica del funcionamiento del sistema</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.sabeContactarSoporte"/> Se como contactar al area de soporte tecnico</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.personalProfesional"/> El personal se presento de manera profesional</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.capacitacionRealizada"/> Recibi capacitacion basica para la operacion diaria del sistema</label>
+            </div>
+
+            <p class="wo-sub">Responsabilidad y garantia</p>
+            <div class="checklist">
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.sabesolicitarSoporte"/> Se como solicitar soporte tecnico en caso de requerir asistencia futura</label>
+              <label class="check-item"><input type="checkbox" [(ngModel)]="general.entiendeLimitesGarantia"/> Entiendo que danos por descargas electricas, agua o manipulacion indebida no aplican como garantia</label>
+            </div>
+
+            <p class="wo-sub">Calificación sobre nuestro servicio (1-10)</p>
+            <div class="calificacion-btns">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <button [class.selected]="general.calificacion === n" (click)="general.calificacion = n">{{ n }}</button>
+              }
+            </div>
+
+            <p class="wo-sub">¿Nos recomendarías?</p>
+            <div class="nps-btns">
+              <button [class.selected]="general.nps === '0-5'" (click)="general.nps = '0-5'">Poco probable</button>
+              <button [class.selected]="general.nps === '7'" (click)="general.nps = '7'">Neutral</button>
+              <button [class.selected]="general.nps === '8-9'" (click)="general.nps = '8-9'">Probable</button>
+              <button [class.selected]="general.nps === '10'" (click)="general.nps = '10'">Super recomendado</button>
+            </div>
+
+            <label class="check-item" style="margin-top:12px"><input type="checkbox" [(ngModel)]="general.solicitaSeguimiento"/> Solicito seguimiento adicional o quiero hacer un comentario con Emanuel Flores.</label>
+            @if (general.solicitaSeguimiento) {
+              <div class="wo-field"><textarea [(ngModel)]="general.comentarios" rows="2" placeholder="Comentarios adicionales..."></textarea></div>
+            }
+          </div>
+
+          <!-- FIRMA DEL CLIENTE GENERAL -->
+          <div class="wo-block">
+            <h3 class="wo-block-title">Firma del cliente</h3>
+            <div class="firma-container">
+              <canvas #firmaGeneral width="600" height="150" class="firma-canvas"
+                      (mouseenter)="iniciarFirma(firmaGeneral)"
+                      (touchstart)="iniciarFirma(firmaGeneral)"></canvas>
+            </div>
+            <button class="btn-limpiar-firma" (click)="limpiarFirma()">Limpiar firma</button>
+          </div>
+        </div>
+      }
+
+      <!-- ══ EVIDENCIA FOTOGRÁFICA ══ -->
+      @if (tipoSeleccionado) {
+        <div class="wo-block evidencia-block">
+          <h3 class="wo-block-title">📸 Evidencia fotográfica</h3>
+          <p class="wo-sub">Adjunta hasta 30 fotos del trabajo realizado.</p>
+
+          <div class="evidencia-grid">
+            @for (url of evidenciaFotos; track url; let i = $index) {
+              <div class="evidencia-thumb" (click)="abrirLightboxWO(i)">
+                <img [src]="url" [alt]="'Foto ' + (i + 1)" loading="lazy" />
+                <button class="evidencia-del" (click)="$event.stopPropagation(); eliminarFotoWO(url)">✕</button>
+              </div>
+            }
+            @if (evidenciaFotos.length < 30) {
+              <label class="evidencia-add" [class.loading]="subiendoFotos">
+                @if (subiendoFotos) {
+                  <span class="evidencia-spinner"></span>
+                } @else {
+                  <span class="evidencia-plus">＋</span>
+                  <span class="evidencia-add-label">Añadir foto</span>
+                }
+                <input type="file" accept="image/*" multiple (change)="onFotosSelected($event)" [disabled]="subiendoFotos" hidden />
+              </label>
+            }
+          </div>
+          <p class="evidencia-counter">{{ evidenciaFotos.length }} / 30 fotos</p>
+        </div>
+
+        <!-- Lightbox -->
+        @if (lightboxUrl) {
+          <div class="lightbox-overlay" (click)="cerrarLightboxWO()">
+            <button class="lightbox-close" (click)="cerrarLightboxWO()">✕</button>
+            @if (lightboxIndex > 0) {
+              <button class="lightbox-nav lightbox-prev" (click)="$event.stopPropagation(); navLightboxWO(-1)">‹</button>
+            }
+            <img class="lightbox-img" [src]="lightboxUrl" (click)="$event.stopPropagation()" />
+            @if (lightboxIndex < evidenciaFotos.length - 1) {
+              <button class="lightbox-nav lightbox-next" (click)="$event.stopPropagation(); navLightboxWO(1)">›</button>
+            }
+            <span class="lightbox-counter">{{ lightboxIndex + 1 }} / {{ evidenciaFotos.length }}</span>
+          </div>
+        }
+      }
+
+      <!-- Botones de acción finales -->
+      @if (tipoSeleccionado) {
+        <div class="wo-actions">
+          <button class="btn-pdf" (click)="generarPDF()" [disabled]="generandoPDF">
+            {{ generandoPDF ? 'Generando PDF...' : 'Descargar PDF' }}
+          </button>
+          <button class="btn-whatsapp-evidencia" (click)="mandarEvidencias()">
+            💬 Mandar evidencias
+          </button>
+          <button class="btn-guardar" (click)="guardarYSalir()" [disabled]="guardando">
+            {{ guardando ? 'Guardando...' : 'Guardar y salir' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 90" height="90" width="380">
+  <!-- Ojo: anillo exterior teal -->
+  <circle cx="45" cy="45" r="43" fill="#1A7FA8"/>
+  <!-- Sombra lateral oscura -->
+  <path d="M45 2 a43 43 0 0 1 0 86 a30 30 0 0 0 0-86z" fill="#0D5A7A" opacity=".55"/>
+  <!-- Interior negro -->
+  <circle cx="45" cy="45" r="27" fill="#0D0D0D"/>
+  <!-- Pupila -->
+  <circle cx="45" cy="45" r="11" fill="#0D0D0D"/>
+  <!-- Reflejo grande -->
+  <circle cx="35" cy="34" r="7" fill="white" opacity=".9"/>
+  <!-- Reflejo pequeño -->
+  <circle cx="48" cy="30" r="3.5" fill="white" opacity=".7"/>
+
+  <!-- SISTEMAS -->
+  <text
+    x="105" y="34"
+    font-family="Arial Black, Arial, sans-serif"
+    font-size="19"
+    font-weight="900"
+    fill="white"
+    letter-spacing="5"
+  >SISTEMAS</text>
+
+  <!-- Línea separadora -->
+  <line x1="105" y1="42" x2="376" y2="42" stroke="white" stroke-width="1.2" opacity=".5"/>
+
+  <!-- INTEGRA -->
+  <text
+    x="103" y="82"
+    font-family="Arial Black, Arial, sans-serif"
+    font-size="44"
+    font-weight="900"
+    fill="white"
+    letter-spacing="6"
+  >INTEGRA</text>
+</svg>

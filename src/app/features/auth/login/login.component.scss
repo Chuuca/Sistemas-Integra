@@ -1,0 +1,247 @@
+// ── Login — Layout dividido ────────────────────────────────────
+.login-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+// ── Panel izquierdo — Marca ────────────────────────────────────
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 420px;
+  min-width: 420px;
+  background: var(--si-navy);
+  padding: 48px 40px 32px;
+  position: relative;
+  overflow: hidden;
+
+  // Círculo decorativo de fondo
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: -120px;
+    left: -80px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    border: 60px solid rgba(41,181,213,.08);
+    pointer-events: none;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -100px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    border: 40px solid rgba(26,122,175,.12);
+    pointer-events: none;
+  }
+}
+
+.brand-isotipo {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  width: 72px;
+  height: 72px;
+  z-index: 2;
+  opacity: .9;
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+}
+
+.form-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  margin-top: -120px;
+}
+
+.logo-img-form {
+  width: 360px;
+  display: block;
+  background: white;
+  border-radius: var(--si-radius);
+  padding: 12px 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
+}
+
+.brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255,255,255,.75);
+  font-size: .875rem;
+}
+
+.feature-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--si-cyan);
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(41,181,213,.5);
+}
+
+.brand-footer {
+  font-size: .75rem;
+  color: rgba(255,255,255,.25);
+  position: absolute;
+  bottom: 24px;
+  left: 40px;
+  z-index: 1;
+}
+
+// ── Panel derecho — Formulario ─────────────────────────────────
+.login-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--si-bg);
+  padding: 40px 24px;
+}
+
+.login-form-wrap {
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-header {
+  margin-bottom: 32px;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--si-navy);
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-size: .9375rem;
+    color: var(--si-text-sub);
+  }
+}
+
+// ── Error ──────────────────────────────────────────────────────
+.error-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--si-red-bg);
+  color: #991B1B;
+  border-radius: var(--si-radius);
+  padding: 11px 14px;
+  font-size: .875rem;
+  margin-bottom: 20px;
+  border: 1px solid #fca5a5;
+}
+
+// ── Campos ────────────────────────────────────────────────────
+.field {
+  margin-bottom: 18px;
+
+  label {
+    display: block;
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--si-text);
+    margin-bottom: 7px;
+    letter-spacing: .01em;
+  }
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .input-icon {
+    position: absolute;
+    left: 13px;
+    color: var(--si-text-muted);
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+
+  input {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+
+  .toggle-password {
+    position: absolute;
+    right: 10px;
+    background: transparent;
+    border: none;
+    color: var(--si-text-muted);
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    &:hover { background: var(--si-border); color: var(--si-text); }
+  }
+}
+
+// ── Botón principal ───────────────────────────────────────────
+.btn-primary {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Pie del formulario ────────────────────────────────────────
+.form-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+  font-size: .875rem;
+
+  span { color: var(--si-text-sub); }
+
+  a {
+    color: var(--si-blue);
+    font-weight: 600;
+    text-decoration: none;
+    &:hover { text-decoration: underline; color: var(--si-blue-dark); }
+  }
+}
+
+// ── Responsive ───────────────────────────────────────────────
+@media (max-width: 768px) {
+  .login-brand { display: none; }
+  .login-form-panel { background: var(--si-white); }
+}

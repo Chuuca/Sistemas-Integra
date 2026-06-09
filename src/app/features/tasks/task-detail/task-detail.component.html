@@ -1,0 +1,613 @@
+@if (loading) {
+  <div class="loading"><p>Cargando tarea...</p></div>
+} @else if (task) {
+  <div class="detail-layout">
+
+    <nav class="navbar">
+      <div class="nav-left">
+        <button class="back-btn" (click)="goBack()">← Volver</button>
+        <img src="/isotipo-si.png" alt="Sistemas Integra" class="nav-imagotipo" style="cursor:pointer" (click)="goHome()"/>
+      </div>
+      <div class="nav-right">
+        <span class="folio-badge">{{ esPedido ? '📦 Pedido' : task.folioId }}</span>
+        <span class="nav-user">{{ currentUser?.nombre }}</span>
+      </div>
+    </nav>
+
+    <div class="content">
+
+      @if (esPedido) {
+
+        <!-- ── VISTA PEDIDO ── -->
+        <div class="task-header">
+          <div class="task-header-left">
+            <h1>📦 Pedido de materiales</h1>
+            <div class="task-meta">
+              <span>👤 Solicitado por: {{ asignadosNombres }}</span>
+              @if (task.creadoEn) {
+                <span>📅 {{ task.creadoEn | date:'dd/MM/yyyy HH:mm' }}</span>
+              }
+            </div>
+          </div>
+          <div class="task-header-right">
+            <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <div class="left-col">
+            <div class="section-card">
+              <div class="section-header"><span>📋 Materiales solicitados</span></div>
+              <p class="desc-text" style="white-space: pre-wrap;">{{ task.descripcion }}</p>
+            </div>
+            @if (task.notas) {
+              <div class="section-card">
+                <div class="section-header"><span>Notas</span></div>
+                <p class="desc-text">{{ task.notas }}</p>
+              </div>
+            }
+          </div>
+          <div class="right-col">
+            <div class="section-card">
+              <div class="section-header"><span>Costo de materiales</span></div>
+              <div class="cobro-field">
+                <label>Monto ($)</label>
+                <div class="abono-row">
+                  <input type="number"
+                         [(ngModel)]="task.monto"
+                         placeholder="0"
+                         min="0"/>
+                  <button class="btn-save-abono" (click)="updateMontoPedido()">
+                    {{ montoPedidoGuardado ? '✅ Guardado' : 'Guardar' }}
+                  </button>
+                </div>
+              </div>
+              <div class="payment-btns" style="margin-top: 12px;">
+                <button [class.active-pagado]="task.pago==='pagado'"
+                        (click)="updatePayment('pagado')">PAGADO</button>
+                <button [class.active-no-pagado]="task.pago==='no_pagado'"
+                        (click)="updatePayment('no_pagado')">PENDIENTE</button>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span>Estado del pedido</span></div>
+              <div class="status-btns">
+                <button [class.active]="task.estado==='pendiente'"
+                        (click)="updateStatus('pendiente')">⏳ Pendiente</button>
+                <button [class.active-progress]="task.estado==='en_progreso'"
+                        (click)="updateStatus('en_progreso')">🔄 En proceso</button>
+              </div>
+              <button (click)="marcarSurtidoYEliminar()"
+                      style="margin-top:12px; width:100%; background:#10B981; color:#fff; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">
+                ✅ Marcar como surtido y eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+
+      } @else {
+
+        <!-- ── VISTA NORMAL ── -->
+        <div class="task-header">
+          <div class="task-header-left">
+            <div class="prioridad-wrap">
+              @if (editandoPrioridad) {
+                <div class="prioridad-selector">
+                  <button [class.active]="task.prioridad === 1" (click)="savePrioridad(1)" title="Baja">★☆☆</button>
+                  <button [class.active]="task.prioridad === 2" (click)="savePrioridad(2)" title="Media">★★☆</button>
+                  <button [class.active]="task.prioridad === 3" (click)="savePrioridad(3)" title="Alta">★★★</button>
+                  <button class="btn-cancel-prioridad" (click)="editandoPrioridad = false">✕</button>
+                </div>
+              } @else {
+                <div class="stars" (click)="isAdmin && (editandoPrioridad = true)" [style.cursor]="isAdmin ? 'pointer' : 'default'" [title]="isAdmin ? 'Clic para editar prioridad' : ''">
+                  @for (s of stars(task.prioridad); track $index) {
+                    <span class="star filled">★</span>
+                  }
+                  @for (s of emptyStars(task.prioridad); track $index) {
+                    <span class="star">☆</span>
+                  }
+                  @if (isAdmin) {
+                    <span class="stars-edit-hint">✏️</span>
+                  }
+                </div>
+              }
+            </div>
+            @if (editandoCliente) {
+              <div class="cliente-edit-wrap">
+                <input class="cliente-edit-input" [(ngModel)]="clienteEdit" placeholder="Nombre del cliente..." autofocus/>
+                <div class="desc-actions">
+                  <button class="btn-save-desc" (click)="saveCliente()">Guardar</button>
+                  <button class="btn-cancel-desc" (click)="cancelEditCliente()">Cancelar</button>
+                </div>
+              </div>
+            } @else {
+              <h1 [class.click-to-edit-title]="isAdmin"
+                  (click)="isAdmin && startEditCliente()"
+                  [title]="isAdmin ? 'Clic para editar' : ''">{{ task.cliente }}</h1>
+            }
+            <div class="task-meta">
+              <span>📍 {{ task.direccion }}</span>
+              <span>📞 <a [href]="'tel:' + task.telefono">{{ task.telefono }}</a></span>
+
+              <!-- Técnico asignado — click para editar (solo admin) -->
+              @if (!editandoTecnico) {
+                <span [class.meta-editable]="isAdmin" (click)="startEditTecnico()">👤 Asignado a: {{ asignadosNombres || 'Sin asignar' }}</span>
+              } @else {
+                <div class="meta-edit-block">
+                  <span class="meta-edit-label">👤 Técnico asignado</span>
+                  <div class="tecnico-checkboxes">
+                    @for (tec of tecnicosDisponibles; track tec.uid) {
+                      <label class="tec-check-label">
+                        <input type="checkbox"
+                               [checked]="esTecnicoSeleccionado(tec.uid)"
+                               (change)="toggleTecnico(tec.uid)" />
+                        {{ tec.nombre }}
+                      </label>
+                    }
+                  </div>
+                  <div class="meta-edit-actions">
+                    <button class="btn-meta-save" (click)="saveEditTecnico()" [disabled]="guardandoTecnicos">
+                      {{ guardandoTecnicos ? 'Guardando…' : 'Guardar' }}
+                    </button>
+                    <button class="btn-meta-cancel" (click)="cancelEditTecnico()">Cancelar</button>
+                  </div>
+                </div>
+              }
+
+              <!-- Hora — click para editar (solo admin) -->
+              @if (!editandoHora) {
+                <span [class.meta-editable]="isAdmin" (click)="startEditHora()">🕐 {{ task.horaProgramada ? formatHora(task.horaProgramada) : 'Sin hora' }}</span>
+              } @else {
+                <div class="meta-edit-block">
+                  <span class="meta-edit-label">🕐 Hora programada</span>
+                  <input type="time" class="meta-input" [(ngModel)]="horaEdit" />
+                  <div class="meta-edit-actions">
+                    <button class="btn-meta-save" (click)="saveEditHora()">Guardar</button>
+                    <button class="btn-meta-cancel" (click)="cancelEditHora()">Cancelar</button>
+                  </div>
+                </div>
+              }
+
+              <!-- Fecha — click para editar (solo admin) -->
+              @if (!editandoFecha) {
+                <span [class.meta-editable]="isAdmin" (click)="startEditFecha()">📅 {{ task.fechaProgramada ? (getFechaAsDate(task.fechaProgramada) | date:'dd/MM/yyyy') : 'Sin fecha' }}</span>
+              } @else {
+                <div class="meta-edit-block">
+                  <span class="meta-edit-label">📅 Fecha programada</span>
+                  <input type="date" class="meta-input" [(ngModel)]="fechaEdit" />
+                  <div class="meta-edit-actions">
+                    <button class="btn-meta-save" (click)="saveEditFecha()">Guardar</button>
+                    <button class="btn-meta-cancel" (click)="cancelEditFecha()">Cancelar</button>
+                  </div>
+                </div>
+              }
+
+              @if (task.duracionEstimada) {
+                <span>⏳ {{ task.duracionEstimada }} min estimados</span>
+              }
+            </div>
+          </div>
+          <div class="task-header-right">
+            <!-- Selector de estado -->
+            <div class="status-selector">
+              <button class="status-opt"
+                      [class.status-pendiente]="task.estado === 'pendiente'"
+                      (click)="changeTaskStatus('pendiente')">
+                <span class="status-dot"></span> Pendiente
+              </button>
+              <button class="status-opt"
+                      [class.status-progreso]="task.estado === 'en_progreso'"
+                      (click)="changeTaskStatus('en_progreso')">
+                <span class="status-dot"></span> En progreso
+              </button>
+              <button class="status-opt"
+                      [class.status-completada]="task.estado === 'completada'"
+                      (click)="changeTaskStatus('completada')">
+                <span class="status-dot"></span> Completada
+              </button>
+            </div>
+            <span class="badge badge-{{getPaymentClass(task.pago)}}">{{ getPaymentLabel(task.pago) }}</span>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <div class="left-col">
+
+            <!-- CRONOMETRO PERSISTENTE (Check-in/Check-out) -->
+            <div class="section-card timer-card">
+              <div class="section-header"><span>Cronómetro de tiempo en el servicio</span></div>
+
+              <!-- Display principal -->
+              <div class="timer-display">{{ formatTiempoPersistente(tiempoActual) }}</div>
+
+              <!-- Estado actual -->
+              <div class="estado-tecnico-badge"
+                   [class.en-sitio]="tareaEnProgreso"
+                   [class.disponible]="!tareaEnProgreso">
+                @if (tareaEnProgreso) {
+                  ⏱️ En curso
+                } @else {
+                  ⏸️ Pausado
+                }
+              </div>
+
+              <!-- Botones de control -->
+              <div class="timer-controls">
+                @if (!tareaEnProgreso && task.estado !== 'completada') {
+                  <button class="btn-timer-start" (click)="toggleCronometroPersistente()" [disabled]="guardandoEstado">
+                    ▶ Iniciar tiempo
+                  </button>
+                }
+                @if (tareaEnProgreso) {
+                  <button class="btn-completar" (click)="completarTarea()" [disabled]="guardandoEstado">
+                    ✅ Completar tarea
+                  </button>
+                }
+                @if (task.estado === 'completada') {
+                  <div class="timer-done">✅ Servicio completado</div>
+                }
+              </div>
+
+              <!-- Información adicional -->
+              <div class="timer-info">
+                <small>
+                  ⏱️ El tiempo se guarda automáticamente y continúa aunque cierres la página.
+                  @if (tareaEnProgreso) {
+                    <span class="info-active">El cronómetro está activo.</span>
+                  } @else {
+                    <span class="info-paused">Presiona "Iniciar tiempo" cuando llegues al sitio.</span>
+                  }
+                </small>
+              </div>
+            </div>
+
+            <!-- Descripción técnica -->
+            <div class="section-card">
+              <div class="section-header"><span>Descripción del Servicio técnico</span></div>
+              @if (editandoDescripcion) {
+                <textarea class="desc-edit" [(ngModel)]="descripcionEdit" rows="4" autofocus
+                          placeholder="Descripción técnica del servicio..."></textarea>
+                <div class="desc-actions">
+                  <button class="btn-save-desc" (click)="saveDescripcion()">Guardar</button>
+                  <button class="btn-cancel-desc" (click)="cancelEditDescripcion()">Cancelar</button>
+                </div>
+              } @else {
+                <div class="click-to-edit" (click)="startEditDescripcion()" title="Clic para editar">
+                  @if (task.descripcion) {
+                    <p class="desc-text">{{ task.descripcion }}</p>
+                  } @else {
+                    <p class="empty-text">Toca para agregar una descripción técnica…</p>
+                  }
+                </div>
+              }
+              <!-- Fotos de descripción técnica -->
+              <div class="desc-fotos-grid">
+                @for (url of descripcionFotos; track url; let i = $index) {
+                  <div class="desc-foto-thumb" (click)="abrirDescLightbox(descripcionFotos, i)">
+                    <img [src]="url" [alt]="'Foto ' + (i+1)" loading="lazy" />
+                    <button class="desc-foto-del" (click)="$event.stopPropagation(); eliminarFotoDesc(url)">✕</button>
+                  </div>
+                }
+                @if (descripcionFotos.length < 20) {
+                  <label class="desc-foto-add" [class.loading]="subiendoFotosDesc">
+                    @if (subiendoFotosDesc) { <span class="evidencia-spinner"></span> }
+                    @else { <span>＋</span> }
+                    <input type="file" accept="image/*" multiple (change)="onFotosDescSelected($event)" [disabled]="subiendoFotosDesc" hidden />
+                  </label>
+                }
+              </div>
+            </div>
+
+            <!-- Descripción ingeniería -->
+            <div class="section-card">
+              <div class="section-header"><span>Descripción del Servicio Ingeniería</span></div>
+              @if (editandoDescIngenieria) {
+                <textarea class="desc-edit" [(ngModel)]="descIngenieriaEdit" rows="4" autofocus
+                          placeholder="Descripción desde el área de ingeniería..."></textarea>
+                <div class="desc-actions">
+                  <button class="btn-save-desc" (click)="saveDescIngenieria()">Guardar</button>
+                  <button class="btn-cancel-desc" (click)="cancelEditDescIngenieria()">Cancelar</button>
+                </div>
+              } @else {
+                <div class="click-to-edit" (click)="startEditDescIngenieria()" title="Clic para editar">
+                  @if (task.descripcionIngenieria) {
+                    <p class="desc-text">{{ task.descripcionIngenieria }}</p>
+                  } @else {
+                    <p class="empty-text">Toca para agregar descripción de ingeniería…</p>
+                  }
+                </div>
+              }
+              <!-- Fotos de descripción ingeniería -->
+              <div class="desc-fotos-grid">
+                @for (url of descripcionIngenieriaFotos; track url; let i = $index) {
+                  <div class="desc-foto-thumb" (click)="abrirDescLightbox(descripcionIngenieriaFotos, i)">
+                    <img [src]="url" [alt]="'Foto ' + (i+1)" loading="lazy" />
+                    <button class="desc-foto-del" (click)="$event.stopPropagation(); eliminarFotoDescIng(url)">✕</button>
+                  </div>
+                }
+                @if (descripcionIngenieriaFotos.length < 20) {
+                  <label class="desc-foto-add" [class.loading]="subiendoFotosDescIng">
+                    @if (subiendoFotosDescIng) { <span class="evidencia-spinner"></span> }
+                    @else { <span>＋</span> }
+                    <input type="file" accept="image/*" multiple (change)="onFotosDescIngSelected($event)" [disabled]="subiendoFotosDescIng" hidden />
+                  </label>
+                }
+              </div>
+            </div>
+
+            <!-- Puntos clave del servicio -->
+            <div class="section-card puntos-clave-card">
+              <div class="section-header"><span>🔑 Puntos clave del servicio</span></div>
+              <p class="puntos-clave-hint">Describe brevemente cómo resultó el servicio, hallazgos o pendientes.</p>
+              @if (editandoPuntosClave) {
+                <textarea class="desc-edit" [(ngModel)]="puntosClaveEdit" rows="4" autofocus
+                          placeholder="Ej: Se reemplazó cámara 3, cliente notó falla en DVR, pendiente cotización de switch..."></textarea>
+                <div class="desc-actions">
+                  <button class="btn-save-desc" (click)="saveEditPuntosClave()">Guardar</button>
+                  <button class="btn-cancel-desc" (click)="cancelEditPuntosClave()">Cancelar</button>
+                </div>
+              } @else {
+                <div class="click-to-edit" (click)="startEditPuntosClave()" title="Clic para editar">
+                  @if (task.puntosClave) {
+                    <p class="desc-text" style="white-space:pre-wrap">{{ task.puntosClave }}</p>
+                  } @else {
+                    <p class="empty-text">Toca para describir los puntos clave…</p>
+                  }
+                </div>
+              }
+              <!-- Fotos de puntos clave -->
+              <div class="desc-fotos-grid">
+                @for (url of puntosClavesFotos; track url; let i = $index) {
+                  <div class="desc-foto-thumb" (click)="abrirDescLightbox(puntosClavesFotos, i)">
+                    <img [src]="url" [alt]="'Foto ' + (i+1)" loading="lazy" />
+                    <button class="desc-foto-del" (click)="$event.stopPropagation(); eliminarFotoPK(url)">✕</button>
+                  </div>
+                }
+                @if (puntosClavesFotos.length < 20) {
+                  <label class="desc-foto-add" [class.loading]="subiendoFotosPK">
+                    @if (subiendoFotosPK) {
+                      <span class="evidencia-spinner"></span>
+                    } @else {
+                      <span>＋</span>
+                    }
+                    <input type="file" accept="image/*" multiple
+                           (change)="onFotosPKSelected($event)"
+                           [disabled]="subiendoFotosPK" hidden />
+                  </label>
+                }
+              </div>
+            </div>
+
+            <!-- Lightbox fotos de descripción -->
+            @if (descLightboxUrl) {
+              <div class="lightbox-overlay" (click)="cerrarDescLightbox()">
+                <button class="lightbox-close" (click)="cerrarDescLightbox()">✕</button>
+                @if (descLightboxIndex > 0) {
+                  <button class="lightbox-nav lightbox-prev" (click)="$event.stopPropagation(); navDescLightbox(-1)">‹</button>
+                }
+                <img class="lightbox-img" [src]="descLightboxUrl" (click)="$event.stopPropagation()" />
+                @if (descLightboxIndex < descLightboxFotos.length - 1) {
+                  <button class="lightbox-nav lightbox-next" (click)="$event.stopPropagation(); navDescLightbox(1)">›</button>
+                }
+                <span class="lightbox-counter">{{ descLightboxIndex + 1 }} / {{ descLightboxFotos.length }}</span>
+              </div>
+            }
+
+            <div class="section-card">
+              <div class="section-header"><span>Herramientas especiales</span></div>
+              <div class="equipo-input">
+                <input [(ngModel)]="newHerramienta"
+                       placeholder="Agregar herramienta..."
+                       (keyup.enter)="addHerramienta()"/>
+                <button (click)="addHerramienta()">+</button>
+              </div>
+            @if (task.herramientasEspeciales.length) {
+                <div class="equipo-list">
+                  @for (h of task.herramientasEspeciales!; track $index; let i = $index) {
+                    <div class="equipo-item">
+                      <span>🛠️ {{ h }}</span>
+                      <button (click)="removeHerramienta(i)">✕</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="empty-text">Sin herramientas especiales.</p>
+              }
+            </div>
+
+            <div class="section-card">
+              <div class="section-header"><span>Equipos</span></div>
+              <div class="equipo-input">
+                <input [(ngModel)]="newEquipoItem"
+                       placeholder="Agregar equipo..."
+                       (keyup.enter)="addEquipoItem()"/>
+                <button (click)="addEquipoItem()">+</button>
+              </div>
+             @if (task.equipos.length) {
+                <div class="equipo-list">
+                  @for (e of task.equipos!; track $index; let i = $index) {
+                    <div class="equipo-item">
+                      <span>📦 {{ e }}</span>
+                      <button (click)="removeEquipoItem(i)">✕</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="empty-text">Sin equipos registrados.</p>
+              }
+            </div>
+
+          </div>
+
+          <div class="right-col">
+
+
+            <!-- HOJA DE TRABAJO -->
+            <div class="section-card">
+              <div class="section-header"><span>📋 Documentación para entrega</span></div>
+
+              @if (hojasGuardadas.length > 0) {
+                <div class="hojas-list">
+                  @for (hoja of hojasGuardadas; track hoja.id) {
+                    <div class="hoja-item" (click)="openWorkOrder()">
+                      <div class="hoja-item-left">
+                        <span class="hoja-item-icon">📄</span>
+                        <div class="hoja-item-info">
+                          <span class="hoja-item-tipo">{{ tipoLabels[hoja.tipo] || hoja.tipo }}</span>
+                          <span class="hoja-item-fecha">{{ hoja.fecha }}</span>
+                        </div>
+                      </div>
+                      <span class="hoja-item-badge" [class.badge-completa]="hoja.completado">
+                        {{ hoja.completado ? 'Completa' : 'En progreso' }}
+                      </span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <div class="wo-btn-group">
+                <button class="btn-work-order" (click)="openWorkOrder()">
+                  {{ hojasGuardadas.length > 0 ? '📝 Ver / editar hojas' : '📝 Abrir hoja de trabajo' }}
+                </button>
+                @if (hojasGuardadas.length > 0) {
+                  <button class="btn-work-order-new" (click)="openNewWorkOrder()">
+                    ＋ Nueva hoja
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- ══ EVIDENCIA FOTOGRÁFICA ══ -->
+            <div class="section-card">
+              <div class="section-header">
+                <h2 class="section-title">📸 Evidencia fotográfica</h2>
+                @if (evidenciaFotos.length < 30) {
+                  <label class="btn-add-foto" [class.loading]="subiendoFotos">
+                    @if (subiendoFotos) {
+                      <span class="td-spinner"></span>
+                    } @else {
+                      + Añadir foto
+                    }
+                    <input type="file" accept="image/*" multiple (change)="onFotosSelectedTD($event)" [disabled]="subiendoFotos" hidden />
+                  </label>
+                }
+              </div>
+
+              @if (evidenciaFotos.length === 0) {
+                <p class="empty-fotos">Aún no hay fotos adjuntas a esta tarea.</p>
+              } @else {
+                <div class="evidencia-grid-td">
+                  @for (url of evidenciaFotos; track url; let i = $index) {
+                    <div class="evidencia-thumb-td" (click)="abrirLightboxTD(i)">
+                      <img [src]="url" [alt]="'Foto ' + (i + 1)" loading="lazy" />
+                      <button class="evidencia-del-td" (click)="$event.stopPropagation(); eliminarFotoTD(url)">✕</button>
+                    </div>
+                  }
+                </div>
+                <p class="evidencia-counter-td">{{ evidenciaFotos.length }} / 30 fotos</p>
+              }
+            </div>
+
+            <!-- Lightbox task-detail -->
+            @if (lightboxUrl) {
+              <div class="lightbox-overlay-td" (click)="cerrarLightboxTD()">
+                <button class="lightbox-close-td" (click)="cerrarLightboxTD()">✕</button>
+                @if (lightboxIndex > 0) {
+                  <button class="lightbox-nav-td lightbox-prev-td" (click)="$event.stopPropagation(); navLightboxTD(-1)">‹</button>
+                }
+                <img class="lightbox-img-td" [src]="lightboxUrl" (click)="$event.stopPropagation()" />
+                @if (lightboxIndex < evidenciaFotos.length - 1) {
+                  <button class="lightbox-nav-td lightbox-next-td" (click)="$event.stopPropagation(); navLightboxTD(1)">›</button>
+                }
+                <span class="lightbox-counter-td">{{ lightboxIndex + 1 }} / {{ evidenciaFotos.length }}</span>
+              </div>
+            }
+
+            <!-- COBRANZA -->
+            <div class="section-card">
+              <div class="section-header"><span>Cobranza</span></div>
+              <p class="monto">${{ task.monto | number }}</p>
+              <div class="payment-btns">
+                <button [class.active-abono]="task.pago==='abono'"
+                        (click)="updatePayment('abono')">Recibo pago</button>
+              </div>
+
+              @if (task.pago === 'abono') {
+                <div class="abono-section">
+                  <div class="abono-input">
+                    <label>Pago recibido ($)</label>
+                    <div class="abono-row">
+                      <input type="number" [(ngModel)]="montoAbonado"
+                             placeholder="0" min="0" [max]="task.monto"/>
+                      <button class="btn-save-abono" (click)="updatePayment('abono')">
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+                  <div class="abono-resumen">
+                    <div class="abono-item">
+                      <span>Total</span>
+                      <span class="abono-total">${{ task.monto | number }}</span>
+                    </div>
+                    <div class="abono-item">
+                      <span>Abonado</span>
+                      <span class="abono-pagado">${{ task.montoAbonado || 0 | number }}</span>
+                    </div>
+                    <div class="abono-item">
+                      <span>Pendiente</span>
+                      <span class="abono-pendiente">${{ montoPendiente | number }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <div class="cobro-section">
+                <div class="field-row">
+                  <div class="cobro-field">
+                    <label>Pago recibido por técnico ($)</label>
+                    <input type="number" [(ngModel)]="task.anticipoRecibido"
+                           placeholder="0" min="0" (change)="updateCobranza()"/>
+                  </div>
+                </div>
+                <div class="cobro-field" style="margin-top:10px">
+                  <label>Plan de cobro</label>
+                  <select [(ngModel)]="task.planCobro" (change)="updateCobranza()">
+                    <option value="al_finalizar">Cobro al finalizar el servicio</option>
+                    <option value="no_cobrar">No cobrar</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+
+      }
+    </div>
+  </div>
+  <!-- FAB cronómetro -->
+  @if (task && task.estado !== 'completada') {
+    <button class="fab-timer"
+            [class.fab-timer-running]="tareaEnProgreso"
+            (click)="toggleCronometroPersistente()"
+            [disabled]="guardandoEstado"
+            [title]="tareaEnProgreso ? 'Detener cronómetro' : 'Iniciar cronómetro'">
+      @if (guardandoEstado) {
+        <span class="fab-spinner"></span>
+      } @else if (tareaEnProgreso) {
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="5" width="4" height="14" rx="1"/>
+          <rect x="14" y="5" width="4" height="14" rx="1"/>
+        </svg>
+      } @else {
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5,3 19,12 5,21"/>
+        </svg>
+      }
+    </button>
+  }
+} @else {
+  <div class="loading"><p>Tarea no encontrada.</p></div>
+}

@@ -1,0 +1,84 @@
+<div class="schedule-layout">
+
+  <nav class="navbar">
+    <div class="nav-left">
+      <button class="back-btn" (click)="goBack()">← Volver</button>
+      <svg width="28" height="28" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="22" fill="#5BB8D4"/>
+        <circle cx="24" cy="24" r="12" fill="#2A7EA8"/>
+        <circle cx="24" cy="24" r="5" fill="#111"/>
+        <circle cx="20" cy="20" r="3" fill="white" opacity="0.6"/>
+      </svg>
+      <span class="nav-title">Portal de Servicios</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user">{{ currentUser?.nombre }}</span>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <div class="page-header">
+      <h1>📅 Servicios próximos</h1>
+      <p>{{ today | date:"EEEE, d 'de' MMMM 'de' yyyy" }}</p>
+    </div>
+
+    <div class="metrics">
+      <div class="metric-card">
+        <span class="metric-num blue">{{ totalProximos }}</span>
+        <span class="metric-label">Programados</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-num red">{{ vencidos }}</span>
+        <span class="metric-label">Vencidos</span>
+      </div>
+    </div>
+
+    @if (tasks.length > 0) {
+      <div class="task-list">
+        @for (task of tasks; track task.id) {
+          <div class="task-item" (click)="openTask(task.id!)">
+
+            <div class="task-date-col">
+              <span class="date-badge badge-{{getDateClass(task.fechaProgramada)}}">
+                {{ getDateLabel(task.fechaProgramada) }}
+              </span>
+              @if (task.horaProgramada) {
+                <span class="time">{{ formatHora(task.horaProgramada) }}</span>
+              }
+            </div>
+
+            <div class="task-info">
+              <div class="task-info-header">
+                <h3>{{ task.cliente }}</h3>
+                <span class="priority-badge priority-{{getPriorityClass(task.prioridad)}}">
+                  {{ getPriorityLabel(task.prioridad) }}
+                </span>
+              </div>
+              <p class="task-address">📍 {{ task.direccion }}</p>
+              @if (isAdmin) {
+                <p class="task-tech">👤 {{ task.asignadoNombre }}</p>
+              }
+              <p class="task-desc">{{ task.descripcion || 'Sin descripción.' }}</p>
+            </div>
+
+            <div class="task-status-col">
+              <span class="folio">{{ task.folioId }}</span>
+              <span class="badge badge-{{task.pago === 'pagado' ? 'pagado' : task.pago === 'abono' ? 'abono' : 'no-pagado'}}">
+                {{ task.pago }}
+              </span>
+            </div>
+
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <div class="empty-icon">🎉</div>
+        <p class="empty-title">Sin servicios próximos</p>
+        <p class="empty-sub">No tienes servicios programados pendientes.</p>
+      </div>
+    }
+
+  </div>
+</div>

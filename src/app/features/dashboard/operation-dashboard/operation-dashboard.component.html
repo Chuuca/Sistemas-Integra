@@ -1,0 +1,114 @@
+<div class="operation-layout">
+
+  <nav class="navbar">
+    <div class="nav-left">
+      <button class="back-btn" (click)="goBack()">← Volver</button>
+      <img src="/isotipo-si.png" alt="Sistemas Integra" style="width:32px;height:32px;object-fit:contain;"/>
+      <span class="nav-title">Dashboard de Operación</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-date">{{ today | date:"EEEE, d 'de' MMMM" }}</span>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <!-- MÉTRICAS GLOBALES -->
+    <div class="metrics">
+      <div class="metric-card">
+        <span class="metric-icon">📋</span>
+        <span class="metric-num">{{ tareasHoy.length }}</span>
+        <span class="metric-label">Tareas hoy</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">✅</span>
+        <span class="metric-num">{{ tareasCompletadasHoy.length }}</span>
+        <span class="metric-label">Completadas</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">⏳</span>
+        <span class="metric-num">{{ tareasPendientesHoy.length }}</span>
+        <span class="metric-label">Pendientes</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">👥</span>
+        <span class="metric-num">{{ tecnicosActivos }}</span>
+        <span class="metric-label">Técnicos activos</span>
+      </div>
+    </div>
+
+    <!-- TABLA DE OPERACIÓN EN TIEMPO REAL -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>🔴 Colaboradores en tiempo real</h2>
+        <span class="live-badge">● En tiempo real</span>
+      </div>
+
+      <div class="operation-table">
+        <div class="table-header">
+          <span>Técnico</span>
+          <span>Estado</span>
+          <span>Tiempo</span>
+          <span>Cliente</span>
+        </div>
+
+        @for (user of users; track user.uid) {
+          <div class="table-row" [class]="'row-' + getEstadoClass(user.uid)">
+            <div class="col-tecnico">
+              <div class="tech-avatar"><img src="/isotipo-si.png" alt=""/></div>
+              <span>{{ user.nombre }}</span>
+            </div>
+            <div class="col-estado">
+              <span class="estado-badge" [class]="'estado-' + getEstadoClass(user.uid)">
+                {{ getEstadoLabel(user.uid) }}
+              </span>
+            </div>
+            <div class="col-time">
+              {{ getElapsedTime(user.uid) }}
+            </div>
+            <div class="col-tarea">
+              {{ getClienteActivo(user.uid) }}
+            </div>
+          </div>
+        }
+
+        @if (users.length === 0) {
+          <div class="table-empty">
+            <p>No hay técnicos registrados.</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- TAREAS COMPLETADAS DEL DÍA -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>✅ Tareas completadas hoy</h2>
+      </div>
+      @if (tareasCompletadasHoy.length > 0) {
+        <div class="attendance-log">
+          @for (tarea of tareasCompletadasHoy; track tarea.id) {
+            <div class="log-row">
+              <div class="log-info">
+                <span class="log-nombre">{{ tarea.cliente }}</span>
+                <div class="log-times">
+                  <span class="folio-small">{{ tarea.folioId }}</span>
+                  <span class="log-entrada">👤 {{ tarea.asignadoNombre }}</span>
+                  @if (tarea.tiempoTotal) {
+                    <span class="log-entrada">⏱ {{ tarea.tiempoTotal }} min</span>
+                  }
+                </div>
+              </div>
+              <span class="log-estado estado-completada">✅ Completada</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="log-empty">
+          <p>Ninguna tarea completada aún hoy.</p>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

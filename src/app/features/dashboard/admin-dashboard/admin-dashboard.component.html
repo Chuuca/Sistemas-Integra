@@ -1,0 +1,379 @@
+<div class="admin-layout">
+
+  <!-- ── NAVBAR ───────────────────────────────────────────── -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <img src="/logo-si.jpg" alt="Sistemas Integra" class="nav-imagotipo"/>
+      <span class="nav-sep"></span>
+      <span class="nav-title">Panel de Operaciones</span>
+    </div>
+    <div class="nav-right">
+      <button class="nav-btn nav-btn-primary" (click)="openModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva tarea
+      </button>
+      <button class="nav-btn nav-btn-mytasks" (click)="router.navigate(['/dashboard'])">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        Mis Tareas
+      </button>
+      <button class="nav-btn" (click)="router.navigate(['/admin/users'])">Empleados</button>
+      <button class="nav-btn" (click)="router.navigate(['/operation'])">Operación</button>
+      <button class="nav-btn" (click)="generarReportePDF()" [disabled]="generandoReporte">
+        {{ generandoReporte ? 'Generando...' : 'Reporte PDF' }}
+      </button>
+      <div class="nav-divider"></div>
+      <span class="nav-user">{{ currentUser?.nombre }}</span>
+      <button class="btn-logout" (click)="logout()">Salir</button>
+    </div>
+  </nav>
+
+  <!-- ── METRICS STRIP ────────────────────────────────────── -->
+  <div class="metrics-strip">
+    <div class="strip-left">
+      <span class="strip-date">{{ today | date:"EEEE, d 'de' MMMM" }}</span>
+      <span class="strip-dot">·</span>
+      <span class="strip-label-main">Resumen del día</span>
+    </div>
+    <div class="strip-stats">
+      <div class="strip-stat">
+        <span class="strip-num">{{ totalTasks }}</span>
+        <span class="strip-lbl">Total</span>
+      </div>
+      <div class="strip-sep"></div>
+      <div class="strip-stat">
+        <span class="strip-num orange">{{ pendientes }}</span>
+        <span class="strip-lbl">Pendientes</span>
+      </div>
+      <div class="strip-sep"></div>
+      <div class="strip-stat">
+        <span class="strip-num blue">{{ enProgreso }}</span>
+        <span class="strip-lbl">En progreso</span>
+      </div>
+      <div class="strip-sep"></div>
+      <div class="strip-stat">
+        <span class="strip-num green">{{ completadas }}</span>
+        <span class="strip-lbl">Completadas</span>
+      </div>
+      <div class="strip-sep"></div>
+      <div class="strip-stat">
+        <span class="strip-num red">{{ vencidas }}</span>
+        <span class="strip-lbl">Vencidas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BODY ─────────────────────────────────────────────── -->
+  <div class="dashboard-body">
+
+    <!-- Tech cards -->
+    @if (technicianSummary.length > 0) {
+      <div class="section-header-row">
+        <span class="section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Equipo — Hoy
+        </span>
+        <span class="section-count">{{ technicianSummary.length }} técnicos activos</span>
+      </div>
+
+      <div class="tech-grid">
+        @for (tech of technicianSummary; track tech.uid) {
+          <div class="tc" [class.tc-expanded]="isGroupExpanded(tech.uid)"
+               [class.tc-active]="getEstadoTecnico(tech.uid) === 'en_sitio' || getEstadoTecnico(tech.uid) === 'disponible'">
+
+            <!-- Header -->
+            <div class="tc-header" (click)="toggleGroup(tech.uid)">
+              <div class="tc-avatar-wrap">
+                <img src="/isotipo-si.png" class="tc-avatar-img" alt=""/>
+                <span class="tc-status-dot" [class]="'dot-' + getEstadoTecnico(tech.uid)"></span>
+              </div>
+              <div class="tc-meta">
+                <span class="tc-name">{{ tech.nombre }}</span>
+                <span class="tc-sub">{{ tech.completadasHoy }}/{{ tech.totalHoy }} tareas hoy</span>
+              </div>
+              <div class="tc-right">
+                <span class="tc-estado-pill" [class]="'pill-' + getEstadoTecnico(tech.uid)">
+                  {{ getEstadoLabel(tech.uid) }}
+                </span>
+                <span class="tc-chevron" [class.open]="isGroupExpanded(tech.uid)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="tc-bar-wrap">
+              <div class="tc-bar-track">
+                <div class="tc-bar">
+                  <div class="tc-bar-fill" [style.width]="tech.progreso + '%'"
+                       [class.complete]="tech.progreso === 100"></div>
+                </div>
+                @if (isEnTraslado(tech.uid)) {
+                  <span class="tc-bar-car">🚙</span>
+                }
+              </div>
+              <span class="tc-pct" [class.done]="tech.progreso === 100">{{ tech.progreso }}%</span>
+            </div>
+
+            <!-- Realtime data row -->
+            <div class="tc-data-row">
+              <div class="tc-data-item">
+                <span class="tc-data-lbl">Entrada</span>
+                <span class="tc-data-val">
+                  @if (getAttendanceEst(tech.uid)?.entrada) {
+                    {{ formatAttTime(getAttendanceEst(tech.uid)?.entrada) }}
+                  } @else {
+                    <span class="tc-no-entry">Sin registro</span>
+                  }
+                </span>
+              </div>
+              <div class="tc-data-item">
+                <span class="tc-data-lbl">Tiempo en servicio</span>
+                <span class="tc-data-val mono">{{ getCronometroActivo(tech.uid) }}</span>
+              </div>
+              <div class="tc-data-item">
+                <span class="tc-data-lbl">En atención con</span>
+                <span class="tc-data-val">{{ getClienteActivo(tech.uid) }}</span>
+              </div>
+              <div class="tc-data-item">
+                <span class="tc-data-lbl">Cobrado sin entregar</span>
+                <span class="tc-data-val">{{ getPagosRecibidos(tech.uid) | currency:'MXN':'symbol-narrow':'1.0-0' }}</span>
+              </div>
+            </div>
+
+            <!-- Expandible tasks -->
+            @if (isGroupExpanded(tech.uid)) {
+              <div class="tc-tasks" (click)="$event.stopPropagation()">
+                <div class="tc-task-filters">
+                  <button [class.active]="getGroupFilter(tech.uid) === 'hoy'"         (click)="setGroupFilter(tech.uid, 'hoy', $event)">Hoy</button>
+                  <button [class.active]="getGroupFilter(tech.uid) === 'proximas'"    (click)="setGroupFilter(tech.uid, 'proximas', $event)">Próximas</button>
+                  <button [class.active]="getGroupFilter(tech.uid) === 'completadas'" (click)="setGroupFilter(tech.uid, 'completadas', $event)">Completadas</button>
+                  @if (getVencidasParaTecnico(tech.uid, getTareasParaTecnico(tech.uid)) > 0) {
+                    <button class="filter-vencidas"
+                            [class.active]="getGroupFilter(tech.uid) === 'vencidas'"
+                            (click)="setGroupFilter(tech.uid, 'vencidas', $event)">
+                      Vencidas
+                      <span class="vencidas-count">{{ getVencidasParaTecnico(tech.uid, getTareasParaTecnico(tech.uid)) }}</span>
+                    </button>
+                  }
+                </div>
+                @for (task of getTareasGrupo(tech.uid, getTareasParaTecnico(tech.uid)); track task.id) {
+                  <div class="tc-task-row" (click)="openTask(task.id!)">
+                    <div class="tc-task-info">
+                      <span class="tc-task-folio">{{ task.folioId }}</span>
+                      <span class="tc-task-cliente">{{ task.cliente }}</span>
+                    </div>
+                    <div class="tc-task-right">
+                      <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+                      <div class="tc-task-actions" (click)="$event.stopPropagation()">
+                        <button class="tc-action-btn" (click)="openModal(task)" title="Editar">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button class="tc-action-btn danger" (click)="deleteTask(task.id!)" title="Eliminar">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+                @if (getTareasGrupo(tech.uid, getTareasParaTecnico(tech.uid)).length === 0) {
+                  <p class="tc-empty">
+                    {{ getGroupFilter(tech.uid) === 'hoy' ? 'Sin tareas asignadas para hoy' : getGroupFilter(tech.uid) === 'proximas' ? 'Sin tareas próximas' : getGroupFilter(tech.uid) === 'vencidas' ? 'Sin tareas vencidas' : 'Sin tareas completadas' }}
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Pedidos -->
+    @if (pedidos.length > 0) {
+      <div class="section-header-row" style="margin-top: 20px;">
+        <span class="section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Pedidos de materiales
+        </span>
+        <span class="section-count">{{ pedidos.length }} pendiente{{ pedidos.length > 1 ? 's' : '' }}</span>
+      </div>
+      <div class="pedidos-grid">
+        @for (task of pedidos; track task.id) {
+          <div class="pedido-row" (click)="openTask(task.id!)">
+            <div class="pedido-row-left">
+              <span class="pedido-tech">{{ task.asignadoNombre[0] || 'Técnico' }}</span>
+              <span class="pedido-desc">{{ task.descripcion }}</span>
+            </div>
+            <div class="pedido-row-right">
+              <span class="pedido-date">{{ task.creadoEn | date:'dd/MM HH:mm' }}</span>
+              <span class="badge badge-{{task.estado}}">{{ getStatusLabel(task.estado) }}</span>
+              <button class="tc-action-btn danger" (click)="$event.stopPropagation(); deleteTask(task.id!)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  </div><!-- /dashboard-body -->
+</div>
+
+<!-- Menú flotante móvil -->
+<div class="mobile-menu-wrap">
+  @if (showMobileMenu) {
+    <div class="mobile-menu-backdrop" (click)="showMobileMenu = false"></div>
+    <div class="mobile-menu-items">
+      <button class="mobile-menu-item" (click)="router.navigate(['/dashboard']); showMobileMenu = false">
+        <span class="mmi-icon">📋</span> Mis tareas
+      </button>
+      <button class="mobile-menu-item" (click)="openModal(); showMobileMenu = false">
+        <span class="mmi-icon">＋</span> Nueva tarea
+      </button>
+      <button class="mobile-menu-item" (click)="router.navigate(['/operation']); showMobileMenu = false">
+        <span class="mmi-icon">⚙</span> Operación
+      </button>
+      <button class="mobile-menu-item" (click)="generarReportePDF(); showMobileMenu = false" [disabled]="generandoReporte">
+        <span class="mmi-icon">📄</span> Reporte del día
+      </button>
+    </div>
+  }
+  <button class="mobile-menu-btn" (click)="showMobileMenu = !showMobileMenu" [class.open]="showMobileMenu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      @if (showMobileMenu) {
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      } @else {
+        <circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/>
+        <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+        <circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/>
+      }
+    </svg>
+  </button>
+</div>
+
+<!-- Modal nueva/editar tarea -->
+@if (showModal) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingTask ? 'Editar Tarea' : 'Nueva Tarea' }}</h2>
+        <button (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label>Cliente *</label>
+          <input [(ngModel)]="form.cliente" placeholder="Nombre del cliente o empresa"/>
+        </div>
+        <div class="field">
+          <label>Dirección *</label>
+          <input [(ngModel)]="form.direccion" placeholder="Dirección completa"/>
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input [(ngModel)]="form.telefono" placeholder="555-000-0000"/>
+        </div>
+        <div class="field">
+          <label>Descripción del Servicio técnico</label>
+          <textarea [(ngModel)]="form.descripcion" rows="3"
+                    placeholder="Descripción técnica del servicio..."></textarea>
+        </div>
+        <div class="field">
+          <label>Descripción del Servicio Ingeniería</label>
+          <textarea [(ngModel)]="form.descripcionIngenieria" rows="3"
+                    placeholder="Descripción desde el área de ingeniería..."></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Prioridad</label>
+            <div class="priority-selector">
+              <button [class.active]="form.prioridad===1" (click)="setPriority(1)">★☆☆</button>
+              <button [class.active]="form.prioridad===2" (click)="setPriority(2)">★★☆</button>
+              <button [class.active]="form.prioridad===3" (click)="setPriority(3)">★★★</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Monto total ($)</label>
+            <input type="number" [(ngModel)]="form.monto"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Asignar técnicos *</label>
+          <div class="tecnicos-chips">
+            @for (u of users; track u.uid) {
+              <button type="button" class="tecnico-chip"
+                      [class.chip-selected]="isTecnicoSelected(u.uid)"
+                      (click)="toggleTecnico(u.uid)">
+                {{ u.nombre }}
+                @if (isTecnicoSelected(u.uid)) { <span class="chip-check">✓</span> }
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Estado de pago</label>
+            <select [(ngModel)]="form.pago">
+              <option value="no_pagado">No pagado</option>
+              <option value="pagado">Pagado</option>
+              <option value="abono">Con saldo pendiente</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Hora programada</label>
+            <input type="time" [(ngModel)]="form.horaProgramada"/>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Fecha programada</label>
+            <input type="date" [(ngModel)]="form.fechaProgramada"/>
+          </div>
+          <div class="field">
+            <label>Duración estimada (minutos)</label>
+            <input type="number" [(ngModel)]="form.duracionEstimada"
+                   placeholder="Ej. 60" min="0"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Herramientas especiales</label>
+          <div class="material-input">
+            <input [(ngModel)]="form.herramientasInput" placeholder="Agregar herramienta..."
+                   (keyup.enter)="addHerramienta()"/>
+            <button (click)="addHerramienta()">+</button>
+          </div>
+          <div class="material-list">
+            @for (h of form.herramientasEspeciales; track $index; let i = $index) {
+              <span class="material-tag">{{ h }} <span (click)="removeHerramienta(i)">✕</span></span>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Equipos</label>
+          <div class="material-input">
+            <input [(ngModel)]="form.equiposInput" placeholder="Agregar equipo..."
+                   (keyup.enter)="addEquipoForm()"/>
+            <button (click)="addEquipoForm()">+</button>
+          </div>
+          <div class="material-list">
+            @for (e of form.equipos; track $index; let i = $index) {
+              <span class="material-tag">{{ e }} <span (click)="removeEquipoForm(i)">✕</span></span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button class="btn-primary" (click)="saveTask()">
+          {{ editingTask ? 'Guardar cambios' : 'Crear tarea' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

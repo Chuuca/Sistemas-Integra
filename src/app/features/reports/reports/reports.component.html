@@ -1,0 +1,177 @@
+<div class="reports-layout">
+
+  <nav class="navbar">
+    <div class="nav-left">
+      <button class="back-btn" (click)="goBack()">← Volver</button>
+      <svg width="28" height="28" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="22" fill="#5BB8D4"/>
+        <circle cx="24" cy="24" r="12" fill="#2A7EA8"/>
+        <circle cx="24" cy="24" r="5" fill="#111"/>
+        <circle cx="20" cy="20" r="3" fill="white" opacity="0.6"/>
+      </svg>
+      <span class="nav-title">Portal de Servicios</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user">{{ currentUser?.nombre }}</span>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <div class="page-header">
+      <h1>📊 Reportes y Fallas</h1>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn" [class.active]="activeTab === 'worksheet'"
+              (click)="activeTab = 'worksheet'">
+        📋 Worksheet
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'estadisticas'"
+              (click)="activeTab = 'estadisticas'">
+        📈 Estadísticas
+      </button>
+    </div>
+
+    <!-- WORKSHEET -->
+    @if (activeTab === 'worksheet') {
+      <div class="section-card">
+        <div class="section-header"><span>Selecciona plantilla de worksheet</span></div>
+        <select [(ngModel)]="selectedTemplate" (ngModelChange)="selectTemplate($event)">
+          <option value="">-- Seleccionar tipo --</option>
+          @for (t of templates; track t.tipo) {
+            <option [value]="t.nombre">{{ t.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      @if (activeTemplate) {
+        <div class="section-card progress-card">
+          <div class="progress-header">
+            <span class="progress-label">{{ activeTemplate.nombre }}</span>
+            <span class="progress-count">{{ checkedItems }} / {{ totalItems }} completados</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width]="progress + '%'"></div>
+          </div>
+          <span class="progress-pct">{{ progress }}%</span>
+        </div>
+
+        @for (seccion of activeTemplate.secciones; track $index) {
+          <div class="section-card">
+            <div class="section-header"><span>{{ seccion.titulo }}</span></div>
+            <div class="checklist">
+              @for (item of seccion.items; track $index) {
+                <div class="checklist-item" [class.checked]="item.checked">
+                  <div class="item-row">
+                    <label class="checkbox-label">
+                      <input type="checkbox" [(ngModel)]="item.checked"/>
+                      <span class="checkmark"></span>
+                      <span class="item-label">{{ item.label }}</span>
+                    </label>
+                  </div>
+                  @if (item.checked) {
+                    <div class="item-nota">
+                      <input [(ngModel)]="item.nota"
+                             placeholder="Agregar nota u observación..."/>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="pdf-actions">
+          <button class="btn-pdf" (click)="generatePdf()">
+            📄 Generar PDF para enviar al cliente
+          </button>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p class="empty-title">Selecciona una plantilla</p>
+          <p class="empty-sub">Elige el tipo de servicio para ver el checklist.</p>
+        </div>
+      }
+    }
+
+    <!-- ESTADÍSTICAS -->
+    @if (activeTab === 'estadisticas') {
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-icon">📋</span>
+          <span class="stat-num blue">{{ totalTareas }}</span>
+          <span class="stat-label">Total tareas</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">✅</span>
+          <span class="stat-num green">{{ completadas }}</span>
+          <span class="stat-label">Completadas</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">⏳</span>
+          <span class="stat-num orange">{{ pendientes }}</span>
+          <span class="stat-label">Pendientes</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">💰</span>
+          <span class="stat-num green">${{ montoCobrado | number }}</span>
+          <span class="stat-label">Cobrado</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">⏱</span>
+          <span class="stat-num blue">{{ tiempoFormateado }}</span>
+          <span class="stat-label">Tiempo total</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">📈</span>
+          <span class="stat-num teal">{{ porcentajeCompletado }}%</span>
+          <span class="stat-label">Completado</span>
+        </div>
+      </div>
+
+      <!-- PROGRESO GENERAL -->
+      <div class="section-card">
+        <div class="section-header"><span>Progreso general</span></div>
+        <div class="progress-header">
+          <span class="progress-label">Tareas completadas</span>
+          <span class="progress-count">{{ completadas }} / {{ totalTareas }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width]="porcentajeCompletado + '%'"></div>
+        </div>
+        <span class="progress-pct">{{ porcentajeCompletado }}%</span>
+      </div>
+
+      <!-- LISTA COMPLETADAS -->
+      <div class="section-card">
+        <div class="section-header"><span>Mis tareas completadas</span></div>
+        @if (tareasCompletadasList.length > 0) {
+          <div class="completed-list">
+            @for (task of tareasCompletadasList; track task.id) {
+              <div class="completed-item">
+                <div class="completed-info">
+                  <span class="completed-folio">{{ task.folioId }}</span>
+                  <span class="completed-name">{{ task.cliente }}</span>
+                </div>
+                <div class="completed-meta">
+                  @if (task.tiempoTotal) {
+                    <span class="meta-time">⏱ {{ task.tiempoTotal }}min</span>
+                  }
+                  <span class="badge badge-{{task.pago === 'pagado' ? 'pagado' : 'no-pagado'}}">
+                    {{ task.pago }}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-text">Sin tareas completadas aún.</p>
+        }
+      </div>
+    }
+
+  </div>
+</div>
